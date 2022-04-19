@@ -1,9 +1,9 @@
 #include <iostream>
 #include <fstream>
-#include "MiniDecafLexer.h"
-#include "MiniDecafParser.h"
+#include "/root/minidecaf/generated/MiniDecafLexer.h"
+#include "/root/minidecaf/generated/MiniDecafParser.h"
 #include "CodeGenVisitor.h"
-
+#include "/root/minidecaf/third_party/antlr4-runtime/antlr4-runtime.h"
 using namespace antlr4;
 using namespace std;
 

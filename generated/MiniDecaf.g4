@@ -7,7 +7,7 @@ prog
     ;
 
 func
-    : 'int' 'main' '(' ')' '{' stmt '}'
+    : 'int' Identifier '(' ')' '{' stmt '}'
     ;
 
 stmt
@@ -15,6 +15,21 @@ stmt
     ;
 
 expr
-    : ('!' | '~' | '-') expr                                        # unaryOp
+    : add                                                           # add_nop
+    ;
+
+add 
+    : add ('+' | '-') add                                           # addSub
+    | mul                                                           # mul_nop
+    ;
+
+mul 
+    : mul ('*' | '/' | '%') mul                                     # mulDiv
+    | unary                                                         # factor_nop
+    ;
+
+unary   
+    :  ('!' | '~' | '-' | '*' | '&') unary                          # unaryOp
+    | '(' expr ')'                                                  # autoParen
     | Interger                                                      # integer 
     ;
