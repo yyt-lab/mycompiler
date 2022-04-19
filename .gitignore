@@ -68,5 +68,5 @@ generated/**
 *.interp
 
 a.out
-minidecaf-tests
+# minidecaf-tests
 out

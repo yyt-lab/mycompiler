@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <fstream>
 #include "MiniDecafLexer.h"
 #include "MiniDecafParser.h"
 #include "CodeGenVisitor.h"
@@ -8,12 +8,16 @@ using namespace antlr4;
 using namespace std;
 
 int main(int argc, const char* argv[]) {
-    if (argc != 2) {
+    if (argc != 3) {
         std::cerr << "[error] Input sourcefile required: ./MiniDecaf <sourcefile>\n";
+        std::cerr << "[error] Ouput sourcefile required: ./MiniDecaf <sourcefile>\n";
         return 1;
     }
+
     ifstream sourceFile;
+    ofstream outFile;
     sourceFile.open(argv[1]);
+    outFile.open(argv[2]);
 
     // lexer & parser part of antlr4
     ANTLRInputStream input(sourceFile);
@@ -27,7 +31,7 @@ int main(int argc, const char* argv[]) {
     string asmCode = codeGenVisitor.visitProg(treeNode);
 
     // We get the asm code!
-    cout << asmCode << endl;
+    outFile << asmCode << endl;
     return 0;
 }
 
