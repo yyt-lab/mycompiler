@@ -12,6 +12,15 @@ public:
     antlrcpp::Any visitUnaryOp(MiniDecafParser::UnaryOpContext *ctx);
     antlrcpp::Any visitInteger(MiniDecafParser::IntegerContext *ctx);
     
+    antlrcpp::Any visitLor_nop(MiniDecafParser::Lor_nopContext *context);
+    antlrcpp::Any visitLand_nop(MiniDecafParser::Land_nopContext *context);
+    antlrcpp::Any visitLor(MiniDecafParser::LorContext *context);
+    antlrcpp::Any visitLand(MiniDecafParser::LandContext *context);
+    antlrcpp::Any visitEqu_nop(MiniDecafParser::Equ_nopContext *context);
+    antlrcpp::Any visitEqual(MiniDecafParser::EqualContext *context);
+    antlrcpp::Any visitRel_nop(MiniDecafParser::Rel_nopContext *context);
+    antlrcpp::Any visitLegt(MiniDecafParser::LegtContext *context);
+    
     antlrcpp::Any visitPrimary_nop(MiniDecafParser::Primary_nopContext *context);
     antlrcpp::Any visitAdd_nop(MiniDecafParser::Add_nopContext *context);
     antlrcpp::Any visitAutoParen(MiniDecafParser::AutoParenContext *context);

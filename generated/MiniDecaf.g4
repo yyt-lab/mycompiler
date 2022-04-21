@@ -15,7 +15,27 @@ stmt
     ;
 
 expr
-    : add                                                           # add_nop
+    : lor_op                                                        # lor_nop
+    ;
+
+lor_op
+    : lor_op '||' lor_op                                            # lor
+    | land_op                                                       # land_nop
+    ;
+
+land_op
+    : land_op '&&' land_op                                          # land
+    | equ                                                           # equ_nop
+    ;
+
+equ
+    : equ ('==' | '!=') equ                                         # equal
+    | rel                                                           # rel_nop
+    ;
+
+rel
+    : rel ('<=' | '>=' | '<' | '>') rel                             # legt
+    | add                                                           # add_nop
     ;
 
 add 

@@ -133,3 +133,89 @@ antlrcpp::Any CodeGenVisitor::visitMulDiv(MiniDecafParser::MulDivContext *contex
     } 
     return retType::UNDEF;
 }
+
+
+antlrcpp::Any CodeGenVisitor::visitLor_nop(MiniDecafParser::Lor_nopContext *context)
+{
+    return visitChildren(context);
+}
+antlrcpp::Any CodeGenVisitor::visitLand_nop(MiniDecafParser::Land_nopContext *context)
+{
+    return visitChildren(context);
+}
+antlrcpp::Any CodeGenVisitor::visitEqu_nop(MiniDecafParser::Equ_nopContext *context)
+{
+    return visitChildren(context);
+}
+antlrcpp::Any CodeGenVisitor::visitRel_nop(MiniDecafParser::Rel_nopContext *context)
+{
+    return visitChildren(context);
+}
+antlrcpp::Any CodeGenVisitor::visitLor(MiniDecafParser::LorContext *context)
+{
+    visit(context->lor_op(0));
+    visit(context->lor_op(1));
+
+    if (context->LOR()) {
+        code_<<pop2
+            <<"\tor a0, t0, t1\n"
+            <<"\tsnez a0, a0\n"
+            <<push;
+        return retType::INT;
+    }
+    return retType::UNDEF;
+}
+
+antlrcpp::Any CodeGenVisitor::visitLand(MiniDecafParser::LandContext *context)
+{
+    visit(context->land_op(0));
+    visit(context->land_op(1));
+
+    if (context->LAND()) {
+        code_<<pop2
+            << "\tmul a0, t0, t1\n"
+            << "\tsnez a0, a0\n"
+            <<push;
+        return retType::INT;
+    }
+    return retType::UNDEF;
+}
+
+antlrcpp::Any CodeGenVisitor::visitEqual(MiniDecafParser::EqualContext *context)
+{
+    visit(context->equ(0));
+    visit(context->equ(1));
+
+    if (context->EQ()) {
+        code_<<pop2
+            <<"\tsub t0, t0, t1\n"
+            <<"\tseqz a0, t0\n";
+    } else if (context->NEQ()) {
+        code_<<pop2
+            <<"\tsub t0, t0, t1\n"
+            <<"\tsnez a0, t0\n";
+    }
+    code_<<push;
+    return retType::INT;
+}
+
+antlrcpp::Any CodeGenVisitor::visitLegt(MiniDecafParser::LegtContext *context)
+{
+    visit(context->rel(0)); // -> TO t1
+    visit(context->rel(1)); // -> TO t0
+
+    code_<<pop2;
+    if (context->LE()) {
+        code_ << "\tsgt a0, t1, t0\n" // t1>t0
+              << "\txori a0, a0, 1\n"; // get t1<=t0
+    } else if (context->LT()) { // t1<t0
+        code_ << "\tslt a0, t1, t0\n"; // t0>t1
+    } else if (context->GE()) { // t1>=t0
+        code_ << "\tslt a0, t1, t0\n" // t1<t0
+              << "\txori a0, a0, 1\n"; // get t1>=t0
+    } else if (context->GT()) {  // t1>t0
+        code_ << "\tsgt a0, t1, t0\n"; // t1<t0
+    }
+    code_<<push;
+    return retType::INT;
+}
