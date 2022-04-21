@@ -1,9 +1,8 @@
 #include <iostream>
 #include <fstream>
-#include "/root/minidecaf/generated/MiniDecafLexer.h"
-#include "/root/minidecaf/generated/MiniDecafParser.h"
+#include "MiniDecafLexer.h"
+#include "MiniDecafParser.h"
 #include "CodeGenVisitor.h"
-#include "/root/minidecaf/third_party/antlr4-runtime/antlr4-runtime.h"
 using namespace antlr4;
 using namespace std;
 
@@ -26,6 +25,7 @@ int main(int argc, const char* argv[]) {
     MiniDecafParser parser(&tokens);
 
     // customized pass: allocator, typer, codegen and etc.
+    // cout<<(parser.func()->toStringTree(true));
     MiniDecafParser::ProgContext* treeNode = parser.prog();
     CodeGenVisitor codeGenVisitor;
     string asmCode = codeGenVisitor.visitProg(treeNode);

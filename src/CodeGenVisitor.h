@@ -1,9 +1,8 @@
 #pragma once
 
-#include "/root/minidecaf/generated/MiniDecafBaseVisitor.h"
+#include "MiniDecafBaseVisitor.h"
 #include <string>
 #include <iostream>
-#include "/root/minidecaf/third_party/antlr4-runtime/antlr4-runtime.h"
 
 class CodeGenVisitor : public MiniDecafBaseVisitor {
 public:
@@ -13,6 +12,7 @@ public:
     antlrcpp::Any visitUnaryOp(MiniDecafParser::UnaryOpContext *ctx);
     antlrcpp::Any visitInteger(MiniDecafParser::IntegerContext *ctx);
     
+    antlrcpp::Any visitPrimary_nop(MiniDecafParser::Primary_nopContext *context);
     antlrcpp::Any visitAdd_nop(MiniDecafParser::Add_nopContext *context);
     antlrcpp::Any visitAutoParen(MiniDecafParser::AutoParenContext *context);
     antlrcpp::Any visitMul_nop(MiniDecafParser::Mul_nopContext *context);

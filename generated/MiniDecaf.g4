@@ -29,7 +29,11 @@ mul
     ;
 
 unary   
-    :  ('!' | '~' | '-' | '*' | '&') unary                          # unaryOp
-    | '(' expr ')'                                                  # autoParen
+    : ('!' | '~' | '-' | '*' | '&') unary                          # unaryOp
+    | primary                                                      # primary_nop
+    ;
+
+primary
+    : '(' expr ')'                                                  # autoParen
     | Interger                                                      # integer 
     ;

@@ -1,5 +1,4 @@
 #include "CodeGenVisitor.h"
-#include "/root/minidecaf/third_party/antlr4-runtime/support/Any.h"
 // @brief: Start visiting the syntax tree from root node Prog
 // @ret: Generated asm code
 antlrcpp::Any CodeGenVisitor::visitProg(MiniDecafParser::ProgContext *ctx) {
@@ -12,12 +11,12 @@ antlrcpp::Any CodeGenVisitor::visitProg(MiniDecafParser::ProgContext *ctx) {
     return code_.str();
 }
 
-// //@brief: Visit the Func part
-// antlrcpp::Any CodeGenVisitor::visitFunc(MiniDecafParser::FuncContext *context)
-// {
-//     // retType rt = ctx->Identifier()->getText();
-//     return visit(context->stmt());
-// }
+antlrcpp::Any CodeGenVisitor::visitPrimary_nop(MiniDecafParser::Primary_nopContext *context)
+{
+    visitChildren(context);
+    return retType::INT;
+}
+
 
 // @brief: Visit ReturnStmt node, son of Stmt node
 antlrcpp::Any CodeGenVisitor::visitReturnStmt(MiniDecafParser::ReturnStmtContext *ctx) {
