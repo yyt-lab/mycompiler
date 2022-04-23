@@ -32,10 +32,17 @@ int main(int argc, const char* argv[]) {
     CodeGenVisitor codeGenVisitor;
     Allocator allocator;
     symTab<int> varTab = allocator.visitProg(treeNode);
-    string asmCode = codeGenVisitor.visitProg(treeNode, varTab);
+
+    Tac *ir = codeGenVisitor.visitProg(treeNode, varTab);
+    // Piece *ir = codeGenVisitor.translate();
+    codeGenVisitor.DumpIR(std::cout);
+    
+    // result << std::endl;
+    // result.flush();
+    return 0;
 
     // We get the asm code!
-    outFile << asmCode << endl;
-    return 0;
+    // outFile << asmCode << endl;
+    // return 0;
 }
 

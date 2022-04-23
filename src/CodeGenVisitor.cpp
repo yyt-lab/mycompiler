@@ -1,22 +1,25 @@
 #include "CodeGenVisitor.h"
 #include "Allocator.h"
+#include "error.hpp"
+
 // @brief: Start visiting the syntax tree from root node Prog
 // @ret: Generated asm code
 antlrcpp::Any CodeGenVisitor::visitProg(MiniDecafParser::ProgContext *ctx, symTab<int>& symbol_) {
     // std::cout<<ctx->func()->Identifier()->getText()<<std::endl;
     // if (ctx->func()->Identifier()->getText() != "main") return "";
     varTab = symbol_;
-    code_ << ".section .text\n"
-        << ".globl main\n"
-        << "main:\n"; 
+    tr = new TransHelper();
+    // code_ << ".section .text\n"
+    //     << ".globl main\n"
+    //     << "main:\n"; 
     visitChildren(ctx);
-    return code_.str();
+    return tr->getTac();
+    // return code_.str();
 }
 
 antlrcpp::Any CodeGenVisitor::visitPrimary_nop(MiniDecafParser::Primary_nopContext *context)
 {
-    visitChildren(context);
-    return retType::INT;
+    return visitChildren(context);
 }
 
 
@@ -30,9 +33,10 @@ antlrcpp::Any CodeGenVisitor::visitReturnStmt(MiniDecafParser::ReturnStmtContext
 // @brief: Visit Integer node, which loads an immediate number into register
 // @ret: Expr type: Int
 antlrcpp::Any CodeGenVisitor::visitInteger(MiniDecafParser::IntegerContext *ctx) {
-    code_ << "\tli a0, " << ctx->getText() << "\n"
-          << push;
-    return retType::INT;
+    // code_ << "\tli a0, " << ctx->getText() << "\n"
+    //       << push;
+    Temp intVal = tr->genLoadImm4(std::stoi(ctx->getText()));
+    return intVal;
 }
 
 // @brief: Visit addNop, which continue iterator
@@ -55,23 +59,19 @@ antlrcpp::Any CodeGenVisitor::visitMul_nop(MiniDecafParser::Mul_nopContext *cont
 
 //@brief: visit add sub
 antlrcpp::Any CodeGenVisitor::visitAddSub(MiniDecafParser::AddSubContext *context){
-    retType rl = visit(context->add(0));
-    retType rr = visit(context->add(1));
+    Temp rl = visit(context->add(0));
+    Temp rr = visit(context->add(1));
     /* 
         ctx-><token_name>() is a ptr point to the token
         ptr == nullptr indicates that the token is undeclared
     */
     if (context->Addition()) {
-        code_<<pop2
-            <<"\tadd a0, t0, t1\n"
-            << push;
-        return retType::INT;
+        Temp result = tr -> genAdd(rl, rr);
+        return result;
     }
     else if (context->Minus()) {
-        code_<<pop2
-            <<"\tsub a0, t1, t0\n"
-            << push;
-        return retType::INT;
+        Temp result = tr -> genSub(rl, rr);
+        return result;
     }
 }
 
@@ -82,58 +82,51 @@ antlrcpp::Any CodeGenVisitor::visitFactor_nop(MiniDecafParser::Factor_nopContext
     return visitChildren(context);
 }
 
-
-
 // @brief: Visit unaryOp node, like '-1', '~12', '!89' and etc. 
 // @ret: Expr type: Int
-antlrcpp::Any CodeGenVisitor::visitUnaryOp(MiniDecafParser::UnaryOpContext *ctx) {
-    visitChildren(ctx);
+antlrcpp::Any CodeGenVisitor::visitUnaryOp(MiniDecafParser::UnaryOpContext *context) {
+    Temp rl = visit(context->unary());
     /* 
         ctx-><token_name>() is a ptr point to the token
         ptr == nullptr indicates that the token is undeclared
     */
-    if (ctx->Minus()) {
-        code_ << pop1
-            << "\tsub a0, x0, t0\n"
-            << push;
-        return retType::INT;
-    } else if(ctx->Exclamation()) {
-        code_ << pop1
-            << "\tseqz a0, t0\n"
-            << push; 
-        return retType::INT;
-    } else if(ctx->Tilde()) {
-        code_ << pop1
-            << "\tnot a0, t0\n"
-            << push;
-        return retType::INT;
+    if (context->Minus()) {
+        // code_ << pop1
+        //     << "\tsub a0, x0, t0\n"
+        //     << push;
+        // return retType::INT;
+        Temp zeroVal = tr->genLoadImm4(0);
+        Temp result = tr -> genSub(zeroVal, rl);
+        return result;
+    } else if(context->Exclamation()) {
+        Temp result = tr -> genLNot(rl);
+        return result;
+    } else if(context->Tilde()) {
+        Temp result = tr -> genBNot(rl);
+        return result;
     }
-    return retType::UNDEF;
+    std::cerr<<"current not support!"<<std::endl;
+    mind_assert(false);
 }
 
 antlrcpp::Any CodeGenVisitor::visitMulDiv(MiniDecafParser::MulDivContext *context)
 {
-    retType rl = visit(context->mul(0));
-    retType rr = visit(context->mul(1));
+    Temp rl = visit(context->mul(0));
+    Temp rr = visit(context->mul(1));
 
     if(context->Multiplication()) {
-        code_ << pop2
-            <<"\tmul a0, t0, t1\n"
-            <<push;
-        return retType::INT;
+        Temp result = tr -> genMul(rl, rr);
+        return result;
     }
     else if (context->Division()) {
-        code_ << pop2
-            <<"\tdiv a0, t1, t0\n"
-            <<push;
-        return retType::INT;
+        Temp result = tr -> genDiv(rl, rr);
+        return result;
     } else if (context->Modulo()) {
-        code_ << pop2
-            <<"\trem a0, t1, t0\n"
-            <<push;
-        return retType::INT;
+        Temp result = tr -> genMod(rl, rr);
+        return result;
     } 
-    return retType::UNDEF;
+    std::cerr<<"current not support!"<<std::endl;
+    mind_assert(false);
 }
 
 
@@ -220,4 +213,28 @@ antlrcpp::Any CodeGenVisitor::visitLegt(MiniDecafParser::LegtContext *context)
     }
     code_<<push;
     return retType::INT;
+}
+
+
+/* Translates an entire AST into a Piece list.
+ *
+ * PARAMETERS:
+ *   tree  - the AST
+ * RETURNS:
+ *   the result Piece list (represented by the first node)
+ */
+Tac *CodeGenVisitor::translate() 
+{
+    // TransHelper *helper = new TransHelper(md);
+    return tr->getTac();
+}
+
+void CodeGenVisitor::DumpIR (std::ostream &os)
+{
+    Tac* tacPtr = translate();
+    while(tacPtr != NULL) {
+        tacPtr->dump(os);
+        os<<std::endl;
+        tacPtr = tacPtr->next;
+    }
 }

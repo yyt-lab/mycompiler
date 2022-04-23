@@ -2,19 +2,17 @@
  *  In tac.hpp, we define Tac's data structures
  *
  */
+#pragma once
 
-#ifndef __MIND_TAC__
-#define __MIND_TAC__
-
-#include "3rdparty/set.hpp"
-#include "define.hpp"
+#include "set.hpp"
+// #include "define.hpp"
 
 #include <iostream>
 
-namespace mind {
+// namespace mind {
 
 #define MIND_TAC_DEFINED
-namespace tac {
+// namespace tac {
 /** Representation of a Temp.
  *
  *  NOTE: We typedef TempObject* as Temp, for easy coding & code reading.
@@ -40,33 +38,29 @@ typedef struct TempObject {
  *  NOTE: Similar to Temp, define a new Label: Label l = new LabelObject();
  *
  */
-typedef struct LabelObject {
-    int id;               // id of a Label
-    std::string str_form; // string format of a Label
-    bool target;          // whether it is a target (eg. JUMP <Label>)
-    Tac *where;           // The TAC which marks this Label (for dataflow analysis)
-} * Label;
+
 
 /** Representation of a function.
  *
  *  NOTE: Don't get confused with symb::Function -- Functy is for backend
  *        Don't use "FunctyObject" directly. Please use "Functy".
  */
-typedef struct FunctyObject {
-    Label entry;         // entry label of the function
-    Tac *code;           // tac chain of the function
-} * Functy;
-
-typedef struct GlobalObject {
-    std::string name;   
-    int value;
-} *GlobalVar;
 
 /** Three address code.
  *
  *  NOTE: We use "struct" instead of "class" here for your convenience.
  * 
  */
+struct Tac;
+
+
+typedef struct LabelObject {
+    int id;               // id of a Label
+    std::string str_form; // string format of a Label
+    bool target;          // whether it is a target (eg. JUMP <Label>)
+    Tac* where;           // The TAC which marks this Label (for dataflow analysis)
+} * Label;
+
 struct Tac {
     // Kinds of TACs.
     /**
@@ -163,6 +157,19 @@ struct Tac {
     void dump(std::ostream &);
 };
 
+
+
+
+typedef struct FunctyObject {
+    Label entry;         // entry label of the function
+    Tac *code;           // tac chain of the function
+} * Functy;
+
+typedef struct GlobalObject {
+    std::string name;   
+    int value;
+} *GlobalVar;
+
 /** Representation of the whole program.
  *
  *  NOTE: 
@@ -192,7 +199,5 @@ struct Piece {
     // dumps the entire Piece list (not a single node)
     void dump(std::ostream &);
 };
-} // namespace tac
-} // namespace mind
-
-#endif // __MIND_TAC__
+// } // namespace tac
+// } // namespace mind

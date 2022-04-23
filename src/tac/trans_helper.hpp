@@ -6,16 +6,13 @@
  *
  */
 
-#ifndef __MIND_TRANSHELPER__
-#define __MIND_TRANSHELPER__
+#pragma once
 
-#include "define.hpp"
-#include "tac/tac.hpp"
+// #include "define.hpp"
+#include "tac.hpp"
 
-namespace mind {
-
-#define MIND_TRANSHELPER_DEFINED
-namespace tac {
+// #define MIND_TRANSHELPER_DEFINED
+// namespace tac {
 
 /** Translation helper.
  *
@@ -25,17 +22,18 @@ namespace tac {
 class TransHelper {
   public:
     // constructor
-    TransHelper(assembly::MachineDesc *);
+    TransHelper();
+    // TransHelper(assembly::MachineDesc *);
     // gets the offset counter of the target machine
-    assembly::OffsetCounter *getOffsetCounter(void);
+    // assembly::OffsetCounter *getOffsetCounter(void);
     // allocates a new int32 temporary variable
     Temp getNewTempI4(void);
     // allocates a new label
     Label getNewLabel(void);
-    // allocates a new entry Label object for function
-    Label getNewEntryLabel(symb::Function *);
-    // starts to translate a function
-    void startFunc(symb::Function *);
+    // // allocates a new entry Label object for function
+    // Label getNewEntryLabel(symb::Function *);
+    // // starts to translate a function
+    // void startFunc(symb::Function *);
     // ends translating a function
     void endFunc(void);
 
@@ -79,16 +77,17 @@ class TransHelper {
 
     // gets the entire Piece list
     Piece *getPiece();
+    Tac *getTac();
 
   private:
     // the machine description
-    assembly::MachineDesc *mach;
+    // assembly::MachineDesc *mach;
     // the Piece list
     Piece head, *ptail;
     // the Tac list of a function
     Tac *tacs, *tacs_tail;
     // the current Function
-    symb::Function *current;
+    // symb::Function *current;
     // counters for temporaries and labels (for their index)
     int var_count, label_count;
     // whether the startup code has been generated
@@ -97,9 +96,6 @@ class TransHelper {
     // appends a Tac to the Tac list
     void chainUp(Tac *);
     // gets a Memo about the Function object
-    Tac *memoOf(symb::Function *);
+    // Tac *memoOf(symb::Function *);
 };
-} // namespace tac
-} // namespace mind
-
-#endif // __MIND_TRANSHELPER__
+// } // namespace tac

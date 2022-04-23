@@ -9,6 +9,8 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/third_party/
     ${PROJECT_SOURCE_DIR}/third_party/antlr4-runtime/
     ${PROJECT_SOURCE_DIR}/src/
+    ${PROJECT_SOURCE_DIR}/src/tac/
+    ${PROJECT_SOURCE_DIR}/src/util/
 )
 
 file(GLOB antlr4-cpp-src
@@ -29,6 +31,10 @@ file(GLOB src_dir
     ${PROJECT_SOURCE_DIR}/generated/MiniDecafBaseVisitor.cpp
     ${PROJECT_SOURCE_DIR}/src/CodeGenVisitor.cpp
     ${PROJECT_SOURCE_DIR}/src/Allocator.cpp
+    ${PROJECT_SOURCE_DIR}/src/util/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/tac/trans_helper.cpp
+    ${PROJECT_SOURCE_DIR}/src/tac/tac.cpp
+
 )
 
 add_library(antlr4-cpp-runtime ${antlr4-cpp-src})

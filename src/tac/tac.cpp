@@ -4,16 +4,14 @@
  *  Keltin Leung 
  */
 
-#include "tac/tac.hpp"
-#include "config.hpp"
-#include "options.hpp"
-#include "tac/flow_graph.hpp"
+#include "error.hpp"
+#include "tac.hpp"
+// #include "config.hpp"
+// #include "options.hpp"
+// #include "tac/flow_graph.hpp"
 
 #include <iomanip>
 #include <sstream>
-
-using namespace mind;
-using namespace mind::tac;
 
 // a syntatic sugar for safety check
 #define REQUIRE_I4(x) mind_assert(4 == x->size);
@@ -631,7 +629,7 @@ Tac *Tac::Mark(Label label) {
  * RETURNS:
  *   the output stream
  */
-std::ostream &mind::operator<<(std::ostream &os, Temp v) {
+std::ostream &operator<<(std::ostream &os, Temp v) {
     return (os << "T" << v->id);
 }
 
@@ -643,7 +641,7 @@ std::ostream &mind::operator<<(std::ostream &os, Temp v) {
  * RETURNS:
  *   the output stream
  */
-std::ostream &mind::operator<<(std::ostream &os, Label l) {
+std::ostream &operator<<(std::ostream &os, Label l) {
     if (l->str_form.empty())
         return (os << "__L" << l->id);
     else
@@ -658,7 +656,7 @@ std::ostream &mind::operator<<(std::ostream &os, Label l) {
  * RETURNS:
  *   the output stream
  */
-std::ostream &mind::operator<<(std::ostream &os, Functy f) {
+std::ostream &operator<<(std::ostream &os, Functy f) {
     for (Tac *p = f->code; p != NULL; p = p->next)
         os << p;
     return os;
@@ -829,14 +827,14 @@ void Piece::dump(std::ostream &os) {
  * RETURNS:
  *   the output stream
  */
-std::ostream &mind::operator<<(std::ostream &os, Tac *t) {
+std::ostream &operator<<(std::ostream &os, Tac *t) {
     std::ostringstream oss;
     t->dump(oss);
     os << std::left << std::setw(32) << oss.str();
 
-    // in dataflow analysis, we will print all the LiveOut sets
-    if (Option::getLevel() == Option::DATAFLOW)
-        os << "| " << t->LiveOut;
+    // // in dataflow analysis, we will print all the LiveOut sets
+    // if (Option::getLevel() == Option::DATAFLOW)
+    //     os << "| " << t->LiveOut;
 
     os << std::endl;
     return os;

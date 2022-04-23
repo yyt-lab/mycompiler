@@ -1,9 +1,13 @@
 #pragma once
 
 #include "MiniDecafBaseVisitor.h"
+#include "Allocator.h"
+#include "tac.hpp"
+#include "trans_helper.hpp"
 #include <string>
 #include <iostream>
 
+// using namespace tac;
 class CodeGenVisitor : public MiniDecafBaseVisitor {
 public:
     antlrcpp::Any visitProg(MiniDecafParser::ProgContext *ctx, symTab<int>& varTab);
@@ -29,6 +33,9 @@ public:
     antlrcpp::Any visitFactor_nop(MiniDecafParser::Factor_nopContext *context);
     antlrcpp::Any visitMulDiv(MiniDecafParser::MulDivContext *context);
     
+    Tac *translate();
+    void DumpIR (std::ostream &os);
+
 private:
     /*
         Stringstream used to store generated codes
@@ -36,6 +43,7 @@ private:
     std::ostringstream code_;
     std::string curFunc;
     symTab<int> varTab;
+    TransHelper *tr;
     /* 
         A simple stack machine model 
         Support basic push, pop1 & pop2 operations
