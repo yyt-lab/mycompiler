@@ -6,7 +6,7 @@
 
 class CodeGenVisitor : public MiniDecafBaseVisitor {
 public:
-    antlrcpp::Any visitProg(MiniDecafParser::ProgContext *ctx);
+    antlrcpp::Any visitProg(MiniDecafParser::ProgContext *ctx, symTab<int>& varTab);
     // antlrcpp::Any visitFunc(MiniDecafParser::FuncContext *context);
     antlrcpp::Any visitReturnStmt(MiniDecafParser::ReturnStmtContext *ctx);
     antlrcpp::Any visitUnaryOp(MiniDecafParser::UnaryOpContext *ctx);
@@ -34,6 +34,8 @@ private:
         Stringstream used to store generated codes
     */
     std::ostringstream code_;
+    std::string curFunc;
+    symTab<int> varTab;
     /* 
         A simple stack machine model 
         Support basic push, pop1 & pop2 operations

@@ -7,15 +7,26 @@ prog
     ;
 
 func
-    : 'int' Identifier '(' ')' '{' stmt '}'
+    : type Identifier '(' ')' '{' stmt* '}'
     ;
 
 stmt
     : 'return' expr ';'                                             # returnStmt
+    | expr? ';'                                                     # expr_nop
+    | declaration                                                   # declaration_nop
     ;
 
 expr
+    : assign_op                                                     # assign_nop
+    ;
+
+declaration
+    : type Identifier ('=' expr)? ';'                               # declare
+    ; 
+
+assign_op
     : lor_op                                                        # lor_nop
+    | Identifier '=' expr                                           # assign
     ;
 
 lor_op
@@ -56,4 +67,8 @@ unary
 primary
     : '(' expr ')'                                                  # autoParen
     | Interger                                                      # integer 
+    ;
+
+type
+    : 'int'                                                         # intType
     ;

@@ -1,9 +1,11 @@
 #include "CodeGenVisitor.h"
+#include "Allocator.h"
 // @brief: Start visiting the syntax tree from root node Prog
 // @ret: Generated asm code
-antlrcpp::Any CodeGenVisitor::visitProg(MiniDecafParser::ProgContext *ctx) {
+antlrcpp::Any CodeGenVisitor::visitProg(MiniDecafParser::ProgContext *ctx, symTab<int>& symbol_) {
     // std::cout<<ctx->func()->Identifier()->getText()<<std::endl;
     // if (ctx->func()->Identifier()->getText() != "main") return "";
+    varTab = symbol_;
     code_ << ".section .text\n"
         << ".globl main\n"
         << "main:\n"; 
