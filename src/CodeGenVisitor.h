@@ -11,7 +11,7 @@
 class CodeGenVisitor : public MiniDecafBaseVisitor {
 public:
     antlrcpp::Any visitProg(MiniDecafParser::ProgContext *ctx, symTab<int>& varTab);
-    // antlrcpp::Any visitFunc(MiniDecafParser::FuncContext *context);
+    antlrcpp::Any visitFunc(MiniDecafParser::FuncContext *context);
     antlrcpp::Any visitReturnStmt(MiniDecafParser::ReturnStmtContext *ctx);
     antlrcpp::Any visitUnaryOp(MiniDecafParser::UnaryOpContext *ctx);
     antlrcpp::Any visitInteger(MiniDecafParser::IntegerContext *ctx);
@@ -33,8 +33,10 @@ public:
     antlrcpp::Any visitFactor_nop(MiniDecafParser::Factor_nopContext *context);
     antlrcpp::Any visitMulDiv(MiniDecafParser::MulDivContext *context);
     
-    Tac *translate();
+    Piece *translate();
     void DumpIR (std::ostream &os);
+
+    CodeGenVisitor();
 
 private:
     /*

@@ -1,6 +1,12 @@
 #include "CodeGenVisitor.h"
 #include "Allocator.h"
 #include "error.hpp"
+#include "type.hpp"
+
+CodeGenVisitor::CodeGenVisitor()
+{
+    tr = new TransHelper();
+}
 
 // @brief: Start visiting the syntax tree from root node Prog
 // @ret: Generated asm code
@@ -8,13 +14,19 @@ antlrcpp::Any CodeGenVisitor::visitProg(MiniDecafParser::ProgContext *ctx, symTa
     // std::cout<<ctx->func()->Identifier()->getText()<<std::endl;
     // if (ctx->func()->Identifier()->getText() != "main") return "";
     varTab = symbol_;
-    tr = new TransHelper();
-    // code_ << ".section .text\n"
-    //     << ".globl main\n"
-    //     << "main:\n"; 
     visitChildren(ctx);
-    return tr->getTac();
+    return nullptr;
     // return code_.str();
+}
+
+antlrcpp::Any CodeGenVisitor::visitFunc(MiniDecafParser::FuncContext *context)
+{
+    Function *fun = new Function(context->Identifier()->getText(), BaseType::Int, new Location(-1));
+    // attaching function entry label
+    fun->attachEntryLabel(tr->getNewEntryLabel(fun));
+    tr->startFunc(fun);
+    return visit(context->stmt(0));
+
 }
 
 antlrcpp::Any CodeGenVisitor::visitPrimary_nop(MiniDecafParser::Primary_nopContext *context)
@@ -25,9 +37,11 @@ antlrcpp::Any CodeGenVisitor::visitPrimary_nop(MiniDecafParser::Primary_nopConte
 
 // @brief: Visit ReturnStmt node, son of Stmt node
 antlrcpp::Any CodeGenVisitor::visitReturnStmt(MiniDecafParser::ReturnStmtContext *ctx) {
-    visit(ctx->expr());
-    code_ << "\tret";
-    return retType::UNDEF;
+    Temp retVal = visit(ctx->expr());
+    tr->genReturn(retVal); // Return 0 by default
+    
+    tr->endFunc();
+    return nullptr;
 }
 
 // @brief: Visit Integer node, which loads an immediate number into register
@@ -223,15 +237,15 @@ antlrcpp::Any CodeGenVisitor::visitLegt(MiniDecafParser::LegtContext *context)
  * RETURNS:
  *   the result Piece list (represented by the first node)
  */
-Tac *CodeGenVisitor::translate() 
+Piece *CodeGenVisitor::translate() 
 {
     // TransHelper *helper = new TransHelper(md);
-    return tr->getTac();
+    return tr->getPiece();
 }
 
 void CodeGenVisitor::DumpIR (std::ostream &os)
 {
-    Tac* tacPtr = translate();
+    Tac* tacPtr = tr->getTac();
     while(tacPtr != NULL) {
         tacPtr->dump(os);
         os<<std::endl;

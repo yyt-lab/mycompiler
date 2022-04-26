@@ -103,17 +103,17 @@ Label TransHelper::getNewLabel(void) {
  * RETURNS:
  *   the entry label object
  */
-// Label TransHelper::getNewEntryLabel(Function *fn) {
-//     mind_assert(NULL != fn);
-//     std::string fn_name = fn->getName();
+Label TransHelper::getNewEntryLabel(Function *fn) {
+    mind_assert(NULL != fn);
+    std::string fn_name = fn->getName();
 
-//     Label l = new LabelObject();
-//     l->id = label_count++;
-//     l->str_form = fn_name;
-//     l->target = true; // such label is referenced by virtual tables
+    Label l = new LabelObject();
+    l->id = label_count++;
+    l->str_form = fn_name;
+    l->target = true; // such label is referenced by virtual tables
 
-//     return l;
-// }
+    return l;
+}
 
 /* Creates a Memo tac about the function parameters.
  *
@@ -125,30 +125,31 @@ Label TransHelper::getNewLabel(void) {
  *   Memo is not operating Tac, i.e. it serves as comments.
  *   this function also fix the offset of the temp vars of the parameters.
  */
-// Tac *TransHelper::memoOf(Function *f) {
-//     std::ostringstream oss;
-//     FuncScope *scope = f->getAssociatedScope();
+Tac *TransHelper::memoOf(Function *f) {
+    std::ostringstream oss;
+    // FuncScope *scope = f->getAssociatedScope();
 
-//     for (Scope::iterator it = scope->begin(); it != scope->end(); ++it) {
-//         Variable *v = (Variable *)*it;
+    // for (Scope::iterator it = scope->begin(); it != scope->end(); ++it) {
+    //     Variable *v = (Variable *)*it;
 
-//         if (v->isParameter()) {
-//             Temp t = v->getTemp();
+    //     if (v->isParameter()) {
+    //         Temp t = v->getTemp();
 
-//             mind_assert(NULL != t); // it should have been created in TransPass1
+    //         mind_assert(NULL != t); // it should have been created in TransPass1
 
-//             t->offset = v->offset;
-//             t->is_offset_fixed = true;
-//             oss << t << ":" << t->offset << " ";
-//         }
-//     }
+    //         t->offset = v->offset;
+    //         t->is_offset_fixed = true;
+    //         oss << t << ":" << t->offset << " ";
+    //     }
+    // }
 
-//     int length = oss.str().size();
-//     char *memo = new char[length + 1];
-//     oss.str().copy(memo, length);
+    // int length = oss.str().size();
+    int length = 0;
+    char *memo = new char[length + 1];
+    oss.str().copy(memo, length);
 
-//     return (Tac::Memo(memo));
-// }
+    return (Tac::Memo(memo));
+}
 
 /* Starts the procession of a Function object.
  *
@@ -157,37 +158,37 @@ Label TransHelper::getNewLabel(void) {
  * NOTE:
  *   the newly created Functy object will be chained up into the Piece list
  */
-// void TransHelper::startFunc(Function *f) {
-//     mind_assert(NULL != f && NULL == current); // non-reentrant
+void TransHelper::startFunc(Function *f) {
+    mind_assert(NULL != f); // non-reentrant
 
-//     Label entry = f->getEntryLabel();
-//     mind_assert(NULL != entry); // it should have been created in TransPass1
+    Label entry = f->getEntryLabel();
+    mind_assert(NULL != entry); // it should have been created in TransPass1
 
-//     ptail = ptail->next = new Piece();
-//     ptail->kind = Piece::FUNCTY;
-//     ptail->as.functy = new FunctyObject();
-//     ptail->as.functy->entry = entry;
-//     current = f;
+    ptail = ptail->next = new Piece();
+    ptail->kind = Piece::FUNCTY;
+    ptail->as.functy = new FunctyObject();
+    ptail->as.functy->entry = entry;
+    current = f;
 
-//     // generates a memorandum line
-//     chainUp(memoOf(f));
+    // generates a memorandum line
+    chainUp(memoOf(f));
 
-//     // generates entry label
-//     genMarkLabel(entry);
-// }
+    // generates entry label
+    genMarkLabel(entry);
+}
 
 /* Ends the procession of the current Function object.
  *
  * NOTE:
  *   the newly created Functy object will be attached to the Function object
  */
-// void TransHelper::endFunc(void) {
-//     // does things automatically
-//     ptail->as.functy->code = tacs;
-//     tacs = tacs_tail = NULL;
-//     current->attachFuncty(ptail->as.functy);
-//     current = NULL;
-// }
+void TransHelper::endFunc(void) {
+    // does things automatically
+    ptail->as.functy->code = tacs;
+    tacs = tacs_tail = NULL;
+    current->attachFuncty(ptail->as.functy);
+    current = NULL;
+}
 
 void TransHelper::genGlobalVarible(std::string name, int value) {
     ptail = ptail->next = new Piece();
@@ -531,5 +532,13 @@ void TransHelper::genMemo(const char *comment) { chainUp(Tac::Memo(comment)); }
  *
  * RETURNS:
  *   the Piece list (representing as a single linked list)
+ */
+Piece *TransHelper::getPiece(void) { return head.next; }
+
+
+/* Retrieves the entire Tacs list.
+ *
+ * RETURNS:
+ *   the Tac list (representing as a single linked list)
  */
 Tac *TransHelper::getTac(void) { return tacs; }

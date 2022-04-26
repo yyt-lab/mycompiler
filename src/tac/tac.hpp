@@ -4,10 +4,10 @@
  */
 #pragma once
 
-#include "set.hpp"
 // #include "define.hpp"
 
 #include <iostream>
+#include <set>
 
 // namespace mind {
 
@@ -119,7 +119,7 @@ struct Tac {
     Tac *next; // the next tac
 
     int bb_num; // basic block number, for dataflow analysis
-    util::Set<Temp> *LiveOut; // for dataflow analysis: LiveOut set of this TAC
+    std::set<Temp> *LiveOut; // for dataflow analysis: LiveOut set of this TAC
     int mark;   // auxiliary: do anything you want
 
     // static creation methods for TACs. (see: TransHelper)

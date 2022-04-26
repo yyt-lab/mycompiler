@@ -814,8 +814,16 @@ void Tac::dump(std::ostream &os) {
  */
 void Piece::dump(std::ostream &os) {
     for (Piece *p = this; p != NULL; p = p->next) {
-        if (FUNCTY == p->kind)
-            os << p->as.functy << std::endl;
+        if (FUNCTY == p->kind){
+            Tac* tacPtr = (p->as.functy->code);
+            while(tacPtr != NULL) {
+                tacPtr->dump(os);
+                os<<std::endl;
+                tacPtr = tacPtr->next;
+            }
+
+        }
+            // os << p->as.functy->code << std::endl;
     }
 }
 

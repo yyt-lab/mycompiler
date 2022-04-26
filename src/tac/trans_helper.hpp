@@ -10,6 +10,7 @@
 
 // #include "define.hpp"
 #include "tac.hpp"
+#include "symbol.hpp"
 
 // #define MIND_TRANSHELPER_DEFINED
 // namespace tac {
@@ -31,9 +32,9 @@ class TransHelper {
     // allocates a new label
     Label getNewLabel(void);
     // // allocates a new entry Label object for function
-    // Label getNewEntryLabel(symb::Function *);
+    Label getNewEntryLabel(Function *);
     // // starts to translate a function
-    // void startFunc(symb::Function *);
+    void startFunc(Function *);
     // ends translating a function
     void endFunc(void);
 
@@ -87,7 +88,7 @@ class TransHelper {
     // the Tac list of a function
     Tac *tacs, *tacs_tail;
     // the current Function
-    // symb::Function *current;
+    Function *current;
     // counters for temporaries and labels (for their index)
     int var_count, label_count;
     // whether the startup code has been generated
@@ -96,6 +97,6 @@ class TransHelper {
     // appends a Tac to the Tac list
     void chainUp(Tac *);
     // gets a Memo about the Function object
-    // Tac *memoOf(symb::Function *);
+    Tac *memoOf(Function *);
 };
 // } // namespace tac

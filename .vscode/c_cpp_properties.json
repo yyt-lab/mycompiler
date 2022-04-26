@@ -5,7 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/generated",
-                "${workspaceFolder}/src/util"
+                "${workspaceFolder}/src/util",
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

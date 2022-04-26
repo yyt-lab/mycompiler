@@ -4,6 +4,7 @@
 #include "MiniDecafParser.h"
 #include "CodeGenVisitor.h"
 #include "Allocator.h"
+#include "riscv_md.hpp"
 using namespace antlr4;
 using namespace std;
 
@@ -16,6 +17,7 @@ int main(int argc, const char* argv[]) {
 
     ifstream sourceFile;
     ofstream outFile;
+    MachineDesc* md = new RiscvDesc();
     sourceFile.open(argv[1]);
     outFile.open(argv[2]);
 
@@ -33,12 +35,15 @@ int main(int argc, const char* argv[]) {
     Allocator allocator;
     symTab<int> varTab = allocator.visitProg(treeNode);
 
-    Tac *ir = codeGenVisitor.visitProg(treeNode, varTab);
-    // Piece *ir = codeGenVisitor.translate();
+    codeGenVisitor.visitProg(treeNode, varTab);
+    Piece *ir = codeGenVisitor.translate();
+    ir->dump(std::cout);
+    // std::cout<<std::endl;
     codeGenVisitor.DumpIR(std::cout);
     
     // result << std::endl;
     // result.flush();
+    md->emitPieces(ir, outFile);
     return 0;
 
     // We get the asm code!
