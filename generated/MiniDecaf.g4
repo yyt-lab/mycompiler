@@ -67,6 +67,7 @@ unary
 primary
     : '(' expr ')'                                                  # autoParen
     | Interger                                                      # integer 
+    | Identifier                                                    # identifier
     ;
 
 type

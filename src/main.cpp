@@ -33,7 +33,7 @@ int main(int argc, const char* argv[]) {
     MiniDecafParser::ProgContext* treeNode = parser.prog();
     CodeGenVisitor codeGenVisitor;
     Allocator allocator;
-    symTab<int> varTab = allocator.visitProg(treeNode);
+    symTab<Temp> varTab = allocator.visitProg(treeNode);
 
     codeGenVisitor.visitProg(treeNode, varTab);
     Piece *ir = codeGenVisitor.translate();

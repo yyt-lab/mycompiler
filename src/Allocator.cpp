@@ -17,7 +17,7 @@ antlrcpp::Any Allocator::visitFunc(MiniDecafParser::FuncContext *context)
 antlrcpp::Any Allocator::visitDeclare(MiniDecafParser::DeclareContext *context)
 {
     std::string varName = context->Identifier()->getText();
-    varTab[curFunc][varName] = offest;
+    varTab[curFunc][varName] = nullptr;
     offest++;
     return retType::INT;
 }

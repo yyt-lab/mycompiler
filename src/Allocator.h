@@ -4,6 +4,7 @@
 #include "string"
 #include "unordered_map"
 #include "tuple"
+#include "tac.hpp"
 
 template<typename T>
 using symTab = std::unordered_map<std::string, std::unordered_map<std::string, T>>;
@@ -27,7 +28,7 @@ class Allocator: public MiniDecafBaseVisitor {
         ------------------------------------------------------
     */
     enum retType {INT, UNDEF}; 
-    symTab<int> varTab;
+    symTab<Temp> varTab;
     std::string curFunc;
     int offest;
 };

@@ -10,7 +10,7 @@ CodeGenVisitor::CodeGenVisitor()
 
 // @brief: Start visiting the syntax tree from root node Prog
 // @ret: Generated asm code
-antlrcpp::Any CodeGenVisitor::visitProg(MiniDecafParser::ProgContext *ctx, symTab<int>& symbol_) {
+antlrcpp::Any CodeGenVisitor::visitProg(MiniDecafParser::ProgContext *ctx, symTab<Temp>& symbol_) {
     // std::cout<<ctx->func()->Identifier()->getText()<<std::endl;
     // if (ctx->func()->Identifier()->getText() != "main") return "";
     varTab = symbol_;
@@ -23,10 +23,18 @@ antlrcpp::Any CodeGenVisitor::visitFunc(MiniDecafParser::FuncContext *context)
 {
     Function *fun = new Function(context->Identifier()->getText(), BaseType::Int, new Location(-1));
     // attaching function entry label
+    curFunc = context->Identifier()->getText();
+    func_ret[curFunc] = false;
+
     fun->attachEntryLabel(tr->getNewEntryLabel(fun));
     tr->startFunc(fun);
-    return visit(context->stmt(0));
-
+    // return visit(context->stmt(0));
+    visitChildren(context);
+    if (func_ret[curFunc] != true) {
+        tr->genReturn(tr->genLoadImm4(0)); // Return 0 by default
+    }
+    tr->endFunc();
+    return nullptr;
 }
 
 antlrcpp::Any CodeGenVisitor::visitPrimary_nop(MiniDecafParser::Primary_nopContext *context)
@@ -39,8 +47,9 @@ antlrcpp::Any CodeGenVisitor::visitPrimary_nop(MiniDecafParser::Primary_nopConte
 antlrcpp::Any CodeGenVisitor::visitReturnStmt(MiniDecafParser::ReturnStmtContext *ctx) {
     Temp retVal = visit(ctx->expr());
     tr->genReturn(retVal); // Return 0 by default
+    func_ret[curFunc] = true;
     
-    tr->endFunc();
+    // tr->endFunc();
     return nullptr;
 }
 
@@ -231,6 +240,38 @@ antlrcpp::Any CodeGenVisitor::visitLegt(MiniDecafParser::LegtContext *context)
     }
     code_<<push;
     return retType::INT;
+}
+
+antlrcpp::Any CodeGenVisitor::visitDeclare(MiniDecafParser::DeclareContext *context)
+{
+    std::string varName = context->Identifier()->getText();
+    varTab[curFunc][varName] = tr->getNewTempI4();
+    if (context->expr()) {
+        Temp val = visitChildren(context->expr());
+        Temp dst = varTab[curFunc][varName];
+        tr->genAssign(dst, val);
+    }
+    return nullptr;
+
+    // return 
+}
+
+antlrcpp::Any CodeGenVisitor::visitAssign(MiniDecafParser::AssignContext *context)
+{
+    std::string varName = context->Identifier()->getText();
+    Temp val = visit(context->expr());
+    Temp dst = varTab[curFunc][varName];
+    tr->genAssign(dst, val);
+    // return nullptr;
+    return dst;
+
+}
+
+antlrcpp::Any CodeGenVisitor::visitIdentifier(MiniDecafParser::IdentifierContext *context)
+{
+    std::string varName = context->Identifier()->getText();
+    Temp dst = varTab[curFunc][varName];
+    return dst;
 }
 
 

@@ -10,7 +10,7 @@
 // using namespace tac;
 class CodeGenVisitor : public MiniDecafBaseVisitor {
 public:
-    antlrcpp::Any visitProg(MiniDecafParser::ProgContext *ctx, symTab<int>& varTab);
+    antlrcpp::Any visitProg(MiniDecafParser::ProgContext *ctx, symTab<Temp>& varTab);
     antlrcpp::Any visitFunc(MiniDecafParser::FuncContext *context);
     antlrcpp::Any visitReturnStmt(MiniDecafParser::ReturnStmtContext *ctx);
     antlrcpp::Any visitUnaryOp(MiniDecafParser::UnaryOpContext *ctx);
@@ -32,6 +32,12 @@ public:
     antlrcpp::Any visitAddSub(MiniDecafParser::AddSubContext *context);
     antlrcpp::Any visitFactor_nop(MiniDecafParser::Factor_nopContext *context);
     antlrcpp::Any visitMulDiv(MiniDecafParser::MulDivContext *context);
+
+    antlrcpp::Any visitDeclare(MiniDecafParser::DeclareContext *context);
+    antlrcpp::Any visitAssign(MiniDecafParser::AssignContext *context);
+    antlrcpp::Any visitIdentifier(MiniDecafParser::IdentifierContext *context);
+
+
     
     Piece *translate();
     void DumpIR (std::ostream &os);
@@ -44,7 +50,8 @@ private:
     */
     std::ostringstream code_;
     std::string curFunc;
-    symTab<int> varTab;
+    symTab<Temp> varTab;
+    std::unordered_map<std::string, bool> func_ret;
     TransHelper *tr;
     /* 
         A simple stack machine model 

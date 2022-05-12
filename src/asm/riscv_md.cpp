@@ -223,6 +223,10 @@ void RiscvDesc::emitTac(Tac *t) {
     case Tac::LOAD_IMM4:
         emitLoadImm4Tac(t);
         break;
+    
+    case Tac::ASSIGN:
+        emitUnaryTac(RiscvInstr::MOVE, t);
+        break;
 
     case Tac::BNOT:
         emitUnaryTac(RiscvInstr::NOT, t);
