@@ -162,68 +162,72 @@ antlrcpp::Any CodeGenVisitor::visitRel_nop(MiniDecafParser::Rel_nopContext *cont
 }
 antlrcpp::Any CodeGenVisitor::visitLor(MiniDecafParser::LorContext *context)
 {
-    visit(context->lor_op(0));
-    visit(context->lor_op(1));
+    Temp rl = visit(context->lor_op(0));
+    Temp rr = visit(context->lor_op(1));
 
     if (context->LOR()) {
-        code_<<pop2
-            <<"\tor a0, t0, t1\n"
-            <<"\tsnez a0, a0\n"
-            <<push;
-        return retType::INT;
+        Temp result = tr -> genLOr(rl, rr);
+        return result;
     }
-    return retType::UNDEF;
+    std::cerr<<"current not support!"<<std::endl;
+    mind_assert(false);
 }
 
 antlrcpp::Any CodeGenVisitor::visitLand(MiniDecafParser::LandContext *context)
 {
-    visit(context->land_op(0));
-    visit(context->land_op(1));
+    // visit(context->land_op(0));
+    // visit(context->land_op(1));
+    Temp rl = visit(context->land_op(0));
+    Temp rr = visit(context->land_op(1));
 
     if (context->LAND()) {
-        code_<<pop2
-            << "\tmul a0, t0, t1\n"
-            << "\tsnez a0, a0\n"
-            <<push;
-        return retType::INT;
+       Temp result = tr -> genLAnd(rl, rr);
+       return result;
     }
-    return retType::UNDEF;
+    std::cerr<<"current not support!"<<std::endl;
+    mind_assert(false);
 }
 
 antlrcpp::Any CodeGenVisitor::visitEqual(MiniDecafParser::EqualContext *context)
 {
-    visit(context->equ(0));
-    visit(context->equ(1));
+    Temp rl = visit(context->equ(0));
+    Temp rr = visit(context->equ(1));
 
     if (context->EQ()) {
-        code_<<pop2
-            <<"\tsub t0, t0, t1\n"
-            <<"\tseqz a0, t0\n";
+        Temp result = tr -> genEqu(rl, rr);
+        return result;
     } else if (context->NEQ()) {
-        code_<<pop2
-            <<"\tsub t0, t0, t1\n"
-            <<"\tsnez a0, t0\n";
+        Temp result = tr -> genNeq(rl, rr);
+        return result;
     }
-    code_<<push;
-    return retType::INT;
+    std::cerr<<"current not support!"<<std::endl;
+    mind_assert(false);
 }
 
 antlrcpp::Any CodeGenVisitor::visitLegt(MiniDecafParser::LegtContext *context)
 {
-    visit(context->rel(0)); // -> TO t1
-    visit(context->rel(1)); // -> TO t0
+    Temp rl = visit(context->rel(0));
+    Temp rr = visit(context->rel(1));
 
     code_<<pop2;
     if (context->LE()) {
-        code_ << "\tsgt a0, t1, t0\n" // t1>t0
-              << "\txori a0, a0, 1\n"; // get t1<=t0
+        Temp result = tr -> genLeq(rl, rr);
+        return result;
+        // code_ << "\tsgt a0, t1, t0\n" // t1>t0
+        //       << "\txori a0, a0, 1\n"; // get t1<=t0
     } else if (context->LT()) { // t1<t0
-        code_ << "\tslt a0, t1, t0\n"; // t0>t1
+        Temp result = tr -> genLes(rl, rr);
+        return result;
+        // code_ << "\tslt a0, t1, t0\n"; // t0>t1
     } else if (context->GE()) { // t1>=t0
-        code_ << "\tslt a0, t1, t0\n" // t1<t0
-              << "\txori a0, a0, 1\n"; // get t1>=t0
+        Temp result = tr -> genGeq(rl, rr);
+        return result;
+        // code_ << "\tslt a0, t1, t0\n" // t1<t0
+        //       << "\txori a0, a0, 1\n"; // get t1>=t0
     } else if (context->GT()) {  // t1>t0
-        code_ << "\tsgt a0, t1, t0\n"; // t1<t0
+        Temp result = tr -> genGtr(rl, rr);
+        return result;
+        // code_ << "\tsgt a0, t1, t0\n"; // t1<t0
     }
     code_<<push;
     return retType::INT;

@@ -11,7 +11,7 @@
 #pragma once
 
 // #include "define.hpp"
-// #include "/scope.hpp"
+#include "scope.hpp"
 #include "type.hpp"
 #include "tac.hpp"
 #include <iostream>
@@ -21,7 +21,7 @@
 
 // #define MIND_SYMB_DEFINED
 // namespace symb {
-
+class Scope;
 /* Representation of the data objects in Mind.
  */
 class Symbol {
@@ -33,7 +33,7 @@ class Symbol {
     // definition location in the source code
     Location *loc;
     // the scope where this symbol is defined
-    // scope::Scope *defined_in;
+    Scope *defined_in;
     // the order of this symbol
     int order;
 
@@ -57,9 +57,9 @@ class Symbol {
     // Tests whether it is a Function
     virtual bool isFunction(void);
     // Gets the scope where this symbol was declared
-    // virtual scope::Scope *getScope(void);
+    virtual Scope *getScope(void);
     // Sets the scope of this symbol
-    // virtual void setScope(scope::Scope *);
+    virtual void setScope(Scope *);
     // Prints this symbol
     virtual void dump(std::ostream &) = 0;
 

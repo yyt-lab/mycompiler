@@ -1,5 +1,5 @@
 #include "symbol.hpp"
-// #include "config.hpp"
+#include "config.hpp"
 
 // using namespace mind;
 // using namespace mind::symb;
@@ -64,18 +64,18 @@ void Symbol::setOrder(int ord) {
  * RETURNS:
  *   the scope where this symbol is defined
  */
-// scope::Scope *Symbol::getScope(void) { return defined_in; }
+Scope *Symbol::getScope(void) { return defined_in; }
 
 /* Sets the scope where this symbol is defined.
  *
  * PARAMETERS:
  *   s     - the scope where this symbol is defined
  */
-// void Symbol::setScope(scope::Scope *s) {
-//     mind_assert(NULL != s);
+void Symbol::setScope(Scope *s) {
+    mind_assert(NULL != s);
 
-//     defined_in = s;
-// }
+    defined_in = s;
+}
 
 /* Prints this symbol.
  *

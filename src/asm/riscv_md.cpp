@@ -260,7 +260,7 @@ void RiscvDesc::emitTac(Tac *t) {
         break;
     
     case Tac::LAND:
-        emitBinaryTac(RiscvInstr::AND, t);
+        emitBinaryTac(RiscvInstr::LAND, t);
         break;
     
     case Tac::LOR:

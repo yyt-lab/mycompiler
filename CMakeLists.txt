@@ -14,6 +14,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/src/asm/
     ${PROJECT_SOURCE_DIR}/src/type/
     ${PROJECT_SOURCE_DIR}/src/symbol/
+    ${PROJECT_SOURCE_DIR}/src/scope/
 )
 
 file(GLOB antlr4-cpp-src
@@ -34,18 +35,21 @@ file(GLOB src_dir
     ${PROJECT_SOURCE_DIR}/generated/MiniDecafBaseVisitor.cpp
     ${PROJECT_SOURCE_DIR}/src/CodeGenVisitor.cpp
     ${PROJECT_SOURCE_DIR}/src/Allocator.cpp
+    ${PROJECT_SOURCE_DIR}/src/misc.cpp
+
     ${PROJECT_SOURCE_DIR}/src/util/*.cpp
     ${PROJECT_SOURCE_DIR}/src/symbol/*.cpp
     ${PROJECT_SOURCE_DIR}/src/tac/*.cpp
     ${PROJECT_SOURCE_DIR}/src/type/*.cpp
     ${PROJECT_SOURCE_DIR}/src/asm/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/scope/*.cpp
 
 
 )
 
 add_library(antlr4-cpp-runtime ${antlr4-cpp-src})
 add_executable(MiniDecaf ${src_dir} src/main.cpp)
-target_link_libraries(MiniDecaf antlr4-cpp-runtime)
+target_link_libraries(MiniDecaf antlr4-cpp-runtime gc)
 
 
 add_custom_target(update_antlr

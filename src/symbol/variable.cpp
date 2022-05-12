@@ -106,7 +106,7 @@ void Variable::dump(std::ostream &os) {
  * PARAMETERS:
  *   v     - the register object
  */
-void Variable::attachTemp(tac::Temp v) {
+void Variable::attachTemp(Temp v) {
     mind_assert(NULL != v && NULL == attached);
 
     attached = v;
