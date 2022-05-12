@@ -30,9 +30,9 @@ antlrcpp::Any CodeGenVisitor::visitFunc(MiniDecafParser::FuncContext *context)
     tr->startFunc(fun);
     // return visit(context->stmt(0));
     visitChildren(context);
-    if (func_ret[curFunc] != true) {
+    // if (func_ret[curFunc] != true) {
         tr->genReturn(tr->genLoadImm4(0)); // Return 0 by default
-    }
+    // }
     tr->endFunc();
     return nullptr;
 }
@@ -334,6 +334,7 @@ antlrcpp::Any CodeGenVisitor::visitIfStmt(MiniDecafParser::IfStmtContext *contex
         // end branch
         tr->genMarkLabel(L2);
     }
+    return nullptr;
 }
 
 

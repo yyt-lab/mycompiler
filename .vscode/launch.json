@@ -9,7 +9,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/root/minidecaf/build/MiniDecaf",
+            "program": "/root/mycode/minidecaf/build/MiniDecaf",
             "args": ["build/test111.c", "build/test111"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
