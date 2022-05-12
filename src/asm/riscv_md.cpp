@@ -264,7 +264,7 @@ void RiscvDesc::emitTac(Tac *t) {
         break;
     
     case Tac::LOR:
-        emitBinaryTac(RiscvInstr::OR, t);
+        emitBinaryTac(RiscvInstr::LOR, t);
         break;
     
     case Tac::ADD:
@@ -286,7 +286,15 @@ void RiscvDesc::emitTac(Tac *t) {
     case Tac::MOD:
         emitBinaryTac(RiscvInstr::REM, t);
         break;
+    
+    case Tac::LEQ:
+        emitBinaryTac(RiscvInstr::LEQ, t);
+        break;
 
+    case Tac::LES:
+        emitBinaryTac(RiscvInstr::SLT, t);
+        break;
+    
     default:
         mind_assert(false); // should not appear inside a basic block
     }
@@ -511,8 +519,18 @@ void RiscvDesc::emitInstr(RiscvInstr *i) {
         oss << "and" << i->r0->name << ", " << i->r1->name << "," << i->r2->name;
         break;
     
+    case RiscvInstr::LAND:
+        oss << "mul" << i->r0->name << ", " << i->r1->name << "," << i->r2->name<<'\n';
+        oss << "snez\t" << i->r0->name << ", " << i->r0->name;
+        break;
+    
     case RiscvInstr::OR:
         oss << "or" << i->r0->name << ", " << i->r1->name << "," << i->r2->name;
+        break; 
+
+    case RiscvInstr::LOR:
+        oss << "or" << i->r0->name << ", " << i->r1->name << "," << i->r2->name<<"\n";
+        oss << "snez\t" << i->r0->name << ", " << i->r0->name;
         break; 
     
     case RiscvInstr::SLT:
@@ -554,6 +572,13 @@ void RiscvDesc::emitInstr(RiscvInstr *i) {
     case RiscvInstr::BEQZ:
         oss << "beqz" << i->r0->name << ", " << i->l;
         break;
+
+    case RiscvInstr::LEQ:
+        oss << "sgt" << i->r0->name << ", " << i->r1->name << "," << i->r2->name<<"\n";
+        oss << "xori\t" << i->r0->name <<", " << i->r0->name << ", " << 1;
+        break;
+    
+
 
     case RiscvInstr::J:
         oss << "j" << i->l;

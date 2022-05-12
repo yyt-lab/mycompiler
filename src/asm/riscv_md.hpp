@@ -84,7 +84,9 @@ struct RiscvInstr : public Instr {
         COMMENT,
         // instructions/pseudo instructions
         AND,
+        LAND,
         OR,
+        LOR,
         XOR,
         ADD,
         SUB,
@@ -106,6 +108,7 @@ struct RiscvInstr : public Instr {
         SLTU,
         SGT,
         SGE,
+        LEQ,
         // You could add other instructions/pseudo instructions here
     } op_code; // operation code
 
