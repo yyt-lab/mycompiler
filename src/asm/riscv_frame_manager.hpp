@@ -29,7 +29,7 @@ class RiscvStackFrameManager {
     // reserves a variable in the local variable area
     void reserve(Temp v);
     // gets a slot to spill some register (i.e. to save some temporary variable)
-    int getSlotToWrite(Temp v, std::set<Temp> *liveness);
+    int getSlotToWrite(Temp v, Set<Temp> *liveness);
     // gets the size of the stack frame
     int getStackFrameSize(void);
 

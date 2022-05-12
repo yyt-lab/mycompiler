@@ -79,7 +79,7 @@
 
 // namespace mind {
 
-  namespace util {
+//   namespace util {
 
 	template <typename _T>
 	class Set {
@@ -195,7 +195,7 @@
 	  set_type* intersectionWith(const set_type* s) const {
 		set_type* tmp = new set_type(std::min(_size, s->_size) + 3);
 
-		iterator i = std::set_intersection(begin(), end(), s->begin(), s->end(), tmp->begin());
+		iterator i = Set_intersection(begin(), end(), s->begin(), s->end(), tmp->begin());
 		tmp->_size = i - tmp->begin();
 		tmp->_ensureCapacity();  // may reduce the capacity
 
@@ -247,6 +247,6 @@
 
 	};
 
-  }  
+//   }  
 // }
 

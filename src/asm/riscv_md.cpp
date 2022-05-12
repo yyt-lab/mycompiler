@@ -311,7 +311,7 @@ void RiscvDesc::emitTac(Tac *t) {
  */
 void RiscvDesc::emitLoadImm4Tac(Tac *t) {
     // eliminates useless assignments
-    if (t->LiveOut->count(t->op0.var) == 0)
+    if (!t->LiveOut->contains(t->op0.var))
         return;
 
     // uses "load immediate number" instruction
@@ -327,7 +327,7 @@ void RiscvDesc::emitLoadImm4Tac(Tac *t) {
  */
 void RiscvDesc::emitUnaryTac(RiscvInstr::OpCode op, Tac *t) {
     // eliminates useless assignments
-    if (t->LiveOut->count(t->op0.var) == 0)
+    if (!t->LiveOut->contains(t->op0.var))
         return;
 
     int r1 = getRegForRead(t->op1.var, 0, t->LiveOut);
@@ -343,12 +343,12 @@ void RiscvDesc::emitUnaryTac(RiscvInstr::OpCode op, Tac *t) {
  */
 void RiscvDesc::emitBinaryTac(RiscvInstr::OpCode op, Tac *t) {
     // eliminates useless assignments
-    if (t->LiveOut->count(t->op0.var) == 0)
+    if (!t->LiveOut->contains(t->op0.var))
         return;
 
-    std::set<Temp>* liveness(t->LiveOut);
-    liveness->insert(t->op1.var);
-    liveness->insert(t->op2.var);
+    Set<Temp>* liveness(t->LiveOut);
+    liveness->add(t->op1.var);
+    liveness->add(t->op2.var);
     int r1 = getRegForRead(t->op1.var, 0, liveness);
     int r2 = getRegForRead(t->op2.var, r1, liveness);
     int r0 = getRegForWrite(t->op0.var, r1, r2, liveness);
@@ -397,8 +397,8 @@ void RiscvDesc::emitFuncty(Functy f) {
 
     for (FlowGraph::iterator it = g->begin(); it != g->end(); ++it) {
         // all variables shared between basic blocks should be reserved
-        std::set<Temp> *liveout = (*it)->LiveOut;
-        for (std::set<Temp>::iterator sit = liveout->begin(); sit != liveout->end();
+        Set<Temp> *liveout = (*it)->LiveOut;
+        for (Set<Temp>::iterator sit = liveout->begin(); sit != liveout->end();
              ++sit) {
             _frame->reserve(*sit);
         }
@@ -732,7 +732,7 @@ int RiscvDesc::getRegForRead(Temp v, int avoid1, LiveSet *live) {
  *   number of the register which can be safely written to
  */
 int RiscvDesc::getRegForWrite(Temp v, int avoid1, int avoid2, LiveSet *live) {
-    if (NULL == v || live->count(v) == 0)
+    if (NULL == v || !live->contains(v))
         return RiscvReg::ZERO;
 
     int i = lookupReg(v);
@@ -766,7 +766,7 @@ void RiscvDesc::spillReg(int i, LiveSet *live) {
 
     Temp v = _reg[i]->var;
 
-    if ((NULL != v) && _reg[i]->dirty && live->count(v) == 1) {
+    if ((NULL != v) && _reg[i]->dirty && live->contains(v)) {
         RiscvReg *base = _reg[RiscvReg::FP];
 
         if (!v->is_offset_fixed) {
@@ -793,7 +793,7 @@ void RiscvDesc::spillDirtyRegs(LiveSet *live) {
     // determines whether we should spill the registers
     for (i = 0; i < RiscvReg::TOTAL_NUM; ++i) {
         if ((NULL != _reg[i]->var) && _reg[i]->dirty &&
-            live->count(_reg[i]->var) == 1)
+            live->contains(_reg[i]->var))
             break;
 
         _reg[i]->var = NULL;
@@ -839,7 +839,7 @@ int RiscvDesc::selectRegToSpill(int avoid1, int avoid2, LiveSet *live) {
         if (!_reg[i]->general)
             continue;
 
-        if ((i != avoid1) && (i != avoid2) && live->count(_reg[i]->var) == 0)
+        if ((i != avoid1) && (i != avoid2) && !live->contains(_reg[i]->var))
             return i;
     }
 

@@ -92,7 +92,7 @@ int RiscvStackFrameManager::findSlotOf(Temp v) {
  *   a slot number representing the slot into which
  *   the variable can be safely saved.
  */
-int RiscvStackFrameManager::getSlotToWrite(Temp v, std::set<Temp> *liveness) {
+int RiscvStackFrameManager::getSlotToWrite(Temp v, Set<Temp> *liveness) {
     mind_assert(NULL != v && NULL != liveness && !v->is_offset_fixed);
 
     int i = findSlotOf(v);
@@ -105,7 +105,7 @@ int RiscvStackFrameManager::getSlotToWrite(Temp v, std::set<Temp> *liveness) {
 
     // now we should look for an available slot
     for (i = reserved_size; i < size; ++i) {
-        if (liveness->count(slots[i]) == 0) {
+        if (!liveness->contains(slots[i])) {
             // ok, let's drive it out
             slots[i]->is_offset_fixed = false;
             v->offset = offsetOf(i);

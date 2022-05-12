@@ -274,6 +274,68 @@ antlrcpp::Any CodeGenVisitor::visitIdentifier(MiniDecafParser::IdentifierContext
     return dst;
 }
 
+antlrcpp::Any CodeGenVisitor::visitConditionalExpr(MiniDecafParser::ConditionalExprContext *context)
+{
+    Label L1 = tr->getNewLabel(); // entry of the false branch
+    Label L2 = tr->getNewLabel(); // exit
+
+    Temp cond_val = visit(context->lor_op()); // 条件值
+    Temp retVal = tr->getNewTempI4(); // 返回值
+
+
+    tr->genJumpOnZero(L1, cond_val); // 失败时，跳转到L1（else）
+
+    // true branch begin
+    tr->genAssign(retVal, visit(context->expr()));
+    tr->genJump(L2); 
+    // true branch end
+
+    // false branch begin
+    // retVal = visit(context->conditional());
+    tr->genMarkLabel(L1);
+    tr->genAssign(retVal, visit(context->conditional()));
+    
+    tr->genMarkLabel(L2);
+    
+    return retVal; 
+    // false branch end
+
+}
+
+antlrcpp::Any CodeGenVisitor::visitIfStmt(MiniDecafParser::IfStmtContext *context)
+{
+    Label L1 = tr->getNewLabel(); // entry of the false branch
+    Label L2 = tr->getNewLabel(); // exit
+
+    
+    Temp cond_val = visit(context->expr());
+
+    if (context->Else()) {
+        tr->genJumpOnZero(L1, cond_val); // 失败时，跳转到L1（else）
+
+        // true branch 
+        visit(context->stmt(0));
+        tr->genJump(L2); // true branch执行结束
+
+        // false branch 
+        tr->genMarkLabel(L1);
+        visit(context->stmt(1));
+
+        // end if 
+        tr->genMarkLabel(L2);
+    } else {
+        tr->genJumpOnZero(L2, cond_val); // 失败时，跳转到L1（else）
+
+        // true branch begin
+        visit(context->stmt(0));
+        tr->genJump(L2); // true branch执行结束
+        // true branch end
+
+        // end branch
+        tr->genMarkLabel(L2);
+    }
+}
+
 
 /* Translates an entire AST into a Piece list.
  *

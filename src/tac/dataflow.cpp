@@ -24,13 +24,13 @@
 // using namespace mind::util;
 
 void BasicBlock::updateLU(Temp v) {
-    if (NULL != v && Def->count(v) == 0)
-        LiveUse->insert(v);
+    if (NULL != v && !Def->contains(v))
+        LiveUse->add(v);
 }
 
 void BasicBlock::updateDEF(Temp v) {
     if (NULL != v)
-        Def->insert(v);
+        Def->add(v);
 }
 
 /* Computes the DEF set and the LiveUse set of this basic block.
@@ -111,7 +111,7 @@ void BasicBlock::computeDefAndLiveUse(void) {
 void FlowGraph::analyzeLiveness(void) {
     bool changed = false;
     BasicBlock *b1 = NULL, *b2 = NULL, *b = NULL;
-    std::set<Temp> newin;
+    Set<Temp> *newin = NULL;
 
     // Step 1. computes Def and LiveUse
     for (int i = 0; i < _n; ++i) {
@@ -137,10 +137,7 @@ void FlowGraph::analyzeLiveness(void) {
             case BasicBlock::BY_JZERO:
                 b1 = getBlock(b->next[0]);
                 b2 = getBlock(b->next[1]);
-                std::set_union( b1->LiveIn->begin(), b1->LiveIn->end(),
-                    b2->LiveIn->begin(),b2->LiveIn->end(),
-                    std::inserter(*b->LiveOut, b->LiveOut->begin()));
-                // b->LiveOut = b1->LiveIn->unionWith(b2->LiveIn);
+                b->LiveOut = b1->LiveIn->unionWith(b2->LiveIn);
                 break;
 
             case BasicBlock::BY_RETURN:
@@ -150,25 +147,11 @@ void FlowGraph::analyzeLiveness(void) {
                 mind_assert(false); // unreachable
             }
 
-            std::set<Temp> tmp;
-            std::set<Temp> tmp2;
             // updates LiveIn
-            std::set_difference(b->LiveOut->begin(), b->LiveOut->end(),
-                b->Def->begin(), b->Def->end(),
-                std::inserter(tmp,tmp.begin()));
-            std::set_union(tmp.begin(), tmp.end(),
-                b->LiveUse->begin(), b->LiveUse->end(),
-                std::inserter(newin, newin.begin()));
-            // newin = b->LiveOut->differenceFrom(b->Def)->unionWith(b->LiveUse);
-
-            // TODO: convert it to check every items in the set
-            std::set_difference(newin.begin(), newin.end(),
-                b->LiveIn->begin(), b->LiveIn->end(),
-                std::inserter(tmp2, tmp2.begin()));
-            if (tmp2.size() != 0) {
-            // if (!newin->equal(b->LiveIn)) {
+            newin = b->LiveOut->differenceFrom(b->Def)->unionWith(b->LiveUse);
+            if (!newin->equal(b->LiveIn)) {
                 changed = true;
-                b->LiveIn = &newin;
+                b->LiveIn = newin;
             }
         }
     }
@@ -201,13 +184,13 @@ void BasicBlock::analyzeLiveness(void) {
         ;
 
     // Step 2. begins with LiveOut of the block
-    t->LiveOut = new std::set<Temp> {*LiveOut};
+    t->LiveOut = new Set<Temp> {*LiveOut};
     // t->LiveOut = LiveOut->clone();
     if (end_kind == BY_JZERO || end_kind == BY_RETURN)
-        t->LiveOut->insert(var);
+        t->LiveOut->add(var);
 
     for (t = t->prev; t != NULL; t = t->prev) {
-        t->LiveOut = new std::set<Temp> {*t->next->LiveOut};
+        t->LiveOut = new Set<Temp> {*t->next->LiveOut};
         // t->LiveOut = t->next->LiveOut->clone();
         t_next = t->next;
 
@@ -217,8 +200,8 @@ void BasicBlock::analyzeLiveness(void) {
         case Tac::LNOT:
         case Tac::BNOT:
             if (NULL != t_next->op0.var)
-                t->LiveOut->erase(t_next->op0.var);
-            t->LiveOut->insert(t_next->op1.var);
+                t->LiveOut->remove(t_next->op0.var);
+            t->LiveOut->add(t_next->op1.var);
             break;
 
         case Tac::ADD:
@@ -235,19 +218,19 @@ void BasicBlock::analyzeLiveness(void) {
         case Tac::LAND:
         case Tac::LOR:
             if (NULL != t_next->op0.var)
-                t->LiveOut->erase(t_next->op0.var);
-            t->LiveOut->insert(t_next->op1.var);
-            t->LiveOut->insert(t_next->op2.var);
+                t->LiveOut->remove(t_next->op0.var);
+            t->LiveOut->add(t_next->op1.var);
+            t->LiveOut->add(t_next->op2.var);
             break;
 
         case Tac::POP:
         case Tac::LOAD_IMM4:
             if (NULL != t_next->op0.var)
-                t->LiveOut->erase(t_next->op0.var);
+                t->LiveOut->remove(t_next->op0.var);
             break;
 
         case Tac::PUSH:
-            t->LiveOut->insert(t_next->op0.var);
+            t->LiveOut->add(t_next->op0.var);
             break;
 
         default:

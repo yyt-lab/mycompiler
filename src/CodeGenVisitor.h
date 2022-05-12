@@ -37,6 +37,9 @@ public:
     antlrcpp::Any visitAssign(MiniDecafParser::AssignContext *context);
     antlrcpp::Any visitIdentifier(MiniDecafParser::IdentifierContext *context);
 
+    antlrcpp::Any visitConditionalExpr(MiniDecafParser::ConditionalExprContext *context);
+    antlrcpp::Any visitIfStmt(MiniDecafParser::IfStmtContext *context);
+
 
     
     Piece *translate();

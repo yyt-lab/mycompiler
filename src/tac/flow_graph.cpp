@@ -30,7 +30,7 @@ struct temp_less {
  * RETURNS:
  *   the output stream
  */
-std::ostream &operator<<(std::ostream &os, std::set<Temp> *s) {
+std::ostream &operator<<(std::ostream &os, Set<Temp> *s) {
     os << "[";
 
     if (NULL != s && !s->empty()) {
@@ -61,10 +61,10 @@ BasicBlock::BasicBlock(void) {
     next[0] = next[1] = -1;
     cancelled = false;
 
-    Def = new std::set<Temp>();     // empty set
-    LiveUse = new std::set<Temp>(); // empty set
-    LiveIn = new std::set<Temp>();  // empty set
-    LiveOut = new std::set<Temp>(); // empty set
+    Def = new Set<Temp>();     // empty set
+    LiveUse = new Set<Temp>(); // empty set
+    LiveIn = new Set<Temp>();  // empty set
+    LiveOut = new Set<Temp>(); // empty set
 }
 
 /* Prints the basic block.

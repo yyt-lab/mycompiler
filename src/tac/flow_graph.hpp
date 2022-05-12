@@ -58,10 +58,10 @@ struct BasicBlock {
     Instr *instr_chain; // for ASM code generation: the associated assembly code sequence
     const char *entry_label; // for ASM code generation: the associated entry label in assembly code
 
-    std::set<Temp> *Def; // the DEF set: ALL variables defined in this block
-    std::set<Temp> *LiveUse; // the LiveUSE set: all used-before-defined variables
-    std::set<Temp> *LiveIn; // the LiveIn set: all variables alive at the entry
-    std::set<Temp> *LiveOut; // the LiveOut set: all variables alive at the exit
+    Set<Temp> *Def; // the DEF set: ALL variables defined in this block
+    Set<Temp> *LiveUse; // the LiveUSE set: all used-before-defined variables
+    Set<Temp> *LiveIn; // the LiveIn set: all variables alive at the entry
+    Set<Temp> *LiveOut; // the LiveOut set: all variables alive at the exit
 
     // constructor
     BasicBlock();
@@ -120,6 +120,6 @@ class FlowGraph {
 // } // namespace tac
 
 // an auxilliary function for printing variable set
-std::ostream &operator<<(std::ostream &, std::set<Temp> *);
+std::ostream &operator<<(std::ostream &, Set<Temp> *);
 // } // namespace mind
 

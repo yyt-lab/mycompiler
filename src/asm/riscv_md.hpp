@@ -15,7 +15,7 @@
 #define RISCV_COMPONENTS_DEFINED
 // namespace assembly {
 // for convinience
-typedef std::set<Temp> LiveSet;
+typedef Set<Temp> LiveSet;
 
 /**
  * RISC-V register.

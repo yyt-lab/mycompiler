@@ -7,26 +7,37 @@ prog
     ;
 
 func
-    : type Identifier '(' ')' '{' stmt* '}'
+    : type Identifier '(' ')' '{' block_item* '}'
+    ;
+
+block_item
+    : stmt                                                          # stmt_nop
+    | declaration                                                   # declaration_nop
     ;
 
 stmt
     : 'return' expr ';'                                             # returnStmt
     | expr? ';'                                                     # expr_nop
-    | declaration                                                   # declaration_nop
-    ;
-
-expr
-    : assign_op                                                     # assign_nop
+    | 'if' '(' expr ')' stmt ('else' stmt)?                         # ifStmt                                                   
     ;
 
 declaration
     : type Identifier ('=' expr)? ';'                               # declare
     ; 
 
+expr
+    : assign_op                                                     # assign_nop
+    ;
+
+
 assign_op
-    : lor_op                                                        # lor_nop
+    : conditional                                                   # conditional_nop
     | Identifier '=' expr                                           # assign
+    ;
+
+conditional
+    : lor_op                                                        # lor_nop
+    | lor_op '?' expr ':' conditional                               # conditionalExpr
     ;
 
 lor_op
