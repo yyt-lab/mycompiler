@@ -7,7 +7,11 @@ prog
     ;
 
 func
-    : type Identifier '(' ')' '{' block_item* '}'
+    : type Identifier '(' ')' compound_statement
+    ;
+
+compound_statement
+    : '{' block_item* '}'                                           # block
     ;
 
 block_item
@@ -19,6 +23,7 @@ stmt
     : 'return' expr ';'                                             # returnStmt
     | expr? ';'                                                     # expr_nop
     | 'if' '(' expr ')' stmt ('else' stmt)?                         # ifStmt                                                   
+    | compound_statement                                            # block_nop
     ;
 
 declaration

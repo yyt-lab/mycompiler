@@ -40,7 +40,7 @@ public:
     antlrcpp::Any visitConditionalExpr(MiniDecafParser::ConditionalExprContext *context);
     antlrcpp::Any visitIfStmt(MiniDecafParser::IfStmtContext *context);
 
-
+    antlrcpp::Any visitBlock(MiniDecafParser::BlockContext *context);
     
     Piece *translate();
     void DumpIR (std::ostream &os);
@@ -53,6 +53,8 @@ private:
     */
     std::ostringstream code_;
     std::string curFunc;
+    int blockDepth;
+    int blockOrder;
     symTab<Temp> varTab;
     std::unordered_map<std::string, bool> func_ret;
     TransHelper *tr;

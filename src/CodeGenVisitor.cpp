@@ -24,15 +24,14 @@ antlrcpp::Any CodeGenVisitor::visitFunc(MiniDecafParser::FuncContext *context)
     Function *fun = new Function(context->Identifier()->getText(), BaseType::Int, new Location(-1));
     // attaching function entry label
     curFunc = context->Identifier()->getText();
-    func_ret[curFunc] = false;
+    blockDepth = -1;
+    blockOrder = 0;
 
     fun->attachEntryLabel(tr->getNewEntryLabel(fun));
     tr->startFunc(fun);
     // return visit(context->stmt(0));
     visitChildren(context);
-    // if (func_ret[curFunc] != true) {
-        tr->genReturn(tr->genLoadImm4(0)); // Return 0 by default
-    // }
+    tr->genReturn(tr->genLoadImm4(0)); // Return 0 by default
     tr->endFunc();
     return nullptr;
 }
@@ -47,7 +46,6 @@ antlrcpp::Any CodeGenVisitor::visitPrimary_nop(MiniDecafParser::Primary_nopConte
 antlrcpp::Any CodeGenVisitor::visitReturnStmt(MiniDecafParser::ReturnStmtContext *ctx) {
     Temp retVal = visit(ctx->expr());
     tr->genReturn(retVal); // Return 0 by default
-    func_ret[curFunc] = true;
     
     // tr->endFunc();
     return nullptr;
@@ -259,10 +257,29 @@ antlrcpp::Any CodeGenVisitor::visitDeclare(MiniDecafParser::DeclareContext *cont
 antlrcpp::Any CodeGenVisitor::visitAssign(MiniDecafParser::AssignContext *context)
 {
     std::string varName = context->Identifier()->getText();
-    Temp val = visit(context->expr());
-    Temp dst = varTab[curFunc][varName];
+
+    std::string blockName = curFunc; 
+    bool find = false;
+    Temp val;
+    Temp dst;
+
+    for (int i=blockDepth; i>=0; i--) {
+        int index = blockName.find_last_of('@');
+        blockName = blockName.substr(0,index) +'@'+ std::to_string(i);
+
+        // auto k = varTab[blockName][varName];
+
+        if (varTab[blockName].count(varName) > 0 &&  varTab[blockName][varName] != 0)
+        {
+            dst = varTab[blockName][varName];
+
+        }
+    }
+
+    val = visit(context->expr());
+    // dst = varTab[curFunc][varName];
     tr->genAssign(dst, val);
-    // return nullptr;
+
     return dst;
 
 }
@@ -335,6 +352,26 @@ antlrcpp::Any CodeGenVisitor::visitIfStmt(MiniDecafParser::IfStmtContext *contex
         tr->genMarkLabel(L2);
     }
     return nullptr;
+}
+
+antlrcpp::Any CodeGenVisitor::visitBlock(MiniDecafParser::BlockContext *context)
+{
+    blockDepth++;
+    std::string blockName = curFunc;
+    if (curFunc.find('@') != curFunc.npos ) {
+        blockName = curFunc.substr(0,curFunc.find_first_of('@'));
+    }
+    curFunc = blockName + "@" + std::to_string(blockOrder) + "@" + std::to_string(blockDepth);
+    for (auto item : context->block_item()) {
+        visit(item);
+    }
+    if (--blockDepth == 0) {
+        ++blockOrder;
+    }
+    int pos = curFunc.find_last_of('@');
+    curFunc = curFunc.substr(0, pos)+'@' + std::to_string(blockDepth);
+    return nullptr;
+
 }
 
 

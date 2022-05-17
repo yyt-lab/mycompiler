@@ -16,7 +16,7 @@ class Allocator: public MiniDecafBaseVisitor {
     antlrcpp::Any visitFunc(MiniDecafParser::FuncContext *context);
     antlrcpp::Any visitDeclare(MiniDecafParser::DeclareContext *context);
     antlrcpp::Any visitAssign(MiniDecafParser::AssignContext *context);
-
+    antlrcpp::Any visitBlock(MiniDecafParser::BlockContext *context);
     private:
     /*
         Symbol table, which stores function, scope & varible information.
@@ -31,4 +31,6 @@ class Allocator: public MiniDecafBaseVisitor {
     symTab<Temp> varTab;
     std::string curFunc;
     int offest;
+    int blockDepth;
+    int blockOrder;
 };
