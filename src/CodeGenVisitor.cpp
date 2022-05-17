@@ -259,21 +259,17 @@ antlrcpp::Any CodeGenVisitor::visitAssign(MiniDecafParser::AssignContext *contex
     std::string varName = context->Identifier()->getText();
 
     std::string blockName = curFunc; 
-    bool find = false;
-    Temp val;
-    Temp dst;
+    Temp val = nullptr;
+    Temp dst = nullptr;
 
     for (int i=blockDepth; i>=0; i--) {
-        int index = blockName.find_last_of('@');
-        blockName = blockName.substr(0,index) +'@'+ std::to_string(i);
-
-        // auto k = varTab[blockName][varName];
-
-        if (varTab[blockName].count(varName) > 0 &&  varTab[blockName][varName] != 0)
-        {
-            dst = varTab[blockName][varName];
-
+        if (varTab[blockName].count(varName) == 0 || varTab[blockName][varName] == nullptr) {
+            int index = blockName.find_last_of('@');
+            blockName = blockName.substr(0,index);
+            continue;
         }
+        dst = varTab[blockName][varName];
+        break;
     }
 
     val = visit(context->expr());
@@ -287,7 +283,19 @@ antlrcpp::Any CodeGenVisitor::visitAssign(MiniDecafParser::AssignContext *contex
 antlrcpp::Any CodeGenVisitor::visitIdentifier(MiniDecafParser::IdentifierContext *context)
 {
     std::string varName = context->Identifier()->getText();
-    Temp dst = varTab[curFunc][varName];
+    std::string blockName = curFunc; 
+    Temp dst = nullptr;
+
+    for (int i=blockDepth; i>=0; i--) {
+        if (varTab[blockName].count(varName) == 0 || varTab[blockName][varName] == nullptr) {
+            int index = blockName.find_last_of('@');
+            blockName = blockName.substr(0,index);
+            continue;
+        }
+        dst = varTab[blockName][varName];
+        break;
+    }
+    
     return dst;
 }
 
@@ -358,10 +366,8 @@ antlrcpp::Any CodeGenVisitor::visitBlock(MiniDecafParser::BlockContext *context)
 {
     blockDepth++;
     std::string blockName = curFunc;
-    if (curFunc.find('@') != curFunc.npos ) {
-        blockName = curFunc.substr(0,curFunc.find_first_of('@'));
-    }
-    curFunc = blockName + "@" + std::to_string(blockOrder) + "@" + std::to_string(blockDepth);
+    curFunc += "@" + std::to_string(blockOrder) + std::to_string(blockDepth);
+
     for (auto item : context->block_item()) {
         visit(item);
     }
@@ -369,7 +375,7 @@ antlrcpp::Any CodeGenVisitor::visitBlock(MiniDecafParser::BlockContext *context)
         ++blockOrder;
     }
     int pos = curFunc.find_last_of('@');
-    curFunc = curFunc.substr(0, pos)+'@' + std::to_string(blockDepth);
+    curFunc = curFunc.substr(0, pos);
     return nullptr;
 
 }

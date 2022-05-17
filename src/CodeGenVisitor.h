@@ -42,6 +42,7 @@ public:
 
     antlrcpp::Any visitBlock(MiniDecafParser::BlockContext *context);
     
+
     Piece *translate();
     void DumpIR (std::ostream &os);
 

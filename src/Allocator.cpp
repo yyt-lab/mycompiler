@@ -34,14 +34,15 @@ antlrcpp::Any Allocator::visitAssign(MiniDecafParser::AssignContext *context)
     bool find = false;
     std::string blockName = curFunc; 
     for (int i=blockDepth; i>=0; i--) {
-        int index = blockName.find_last_of('@');
-        blockName = blockName.substr(0,index) +'@'+ std::to_string(i);
-
-        if (varTab[blockName].count(varName) > 0)
-        {
-            find = true;
+        // if (varTab[blockName].count(varName) == 0) {
+        if (varTab[blockName].find(varName) == varTab[blockName].end() ) {
+            int index = blockName.find_last_of('@');
+            blockName = blockName.substr(0,index);
+            continue;
         }
+        find = true;
     }
+
     if (find == false) {
         std::cerr<<"undefined variable name :"<<varName<<std::endl;
         assert(0);
@@ -58,18 +59,39 @@ antlrcpp::Any Allocator::visitBlock(MiniDecafParser::BlockContext *context)
         main@1@1: 1
     */
     blockDepth++;
-    std::string blockName = curFunc;
-    if (curFunc.find('@') != curFunc.npos ) {
-        blockName = curFunc.substr(0,curFunc.find_first_of('@'));
-    }
-    curFunc = blockName + "@" + std::to_string(blockOrder) + "@" + std::to_string(blockDepth);
+    curFunc += "@" + std::to_string(blockOrder) + std::to_string(blockDepth);
     for (auto item : context->block_item()) {
         visitChildren(item);
     }
     if (--blockDepth == 0) {
         blockOrder++;
     }
+
     int pos = curFunc.find_last_of('@');
-    curFunc = curFunc.substr(0, pos)+'@' + std::to_string(blockDepth);
+    curFunc = curFunc.substr(0, pos);
+    return retType::INT;
+}
+
+antlrcpp::Any Allocator::visitIdentifier(MiniDecafParser::IdentifierContext *context)
+{
+    std::string varName = context->Identifier()->getText();
+    bool find = false;
+    std::string blockName = curFunc; 
+
+    for (int i=blockDepth; i>=0; i--) {
+        // if (varTab[blockName].count(varName) == 0) {
+        if (varTab[blockName].find(varName) == varTab[blockName].end() ) {
+            int index = blockName.find_last_of('@');
+            blockName = blockName.substr(0,index);
+            continue;
+        }
+        find = true;
+    }
+
+    if (find == false) {
+        std::cerr<<"undefined variable name :"<<varName<<std::endl;
+        assert(0);
+    }
+
     return retType::INT;
 }
