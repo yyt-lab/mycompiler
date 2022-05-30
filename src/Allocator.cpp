@@ -95,3 +95,17 @@ antlrcpp::Any Allocator::visitIdentifier(MiniDecafParser::IdentifierContext *con
 
     return retType::INT;
 }
+
+antlrcpp::Any Allocator::visitForLoop(MiniDecafParser::ForLoopContext *context)
+{
+    blockDepth++;
+    curFunc += "@" + std::to_string(blockOrder) + std::to_string(blockDepth);
+    visitChildren(context);
+    if (--blockDepth == 0) {
+        blockOrder++;
+    }
+
+    int pos = curFunc.find_last_of('@');
+    curFunc = curFunc.substr(0, pos);
+    return retType::INT;
+}

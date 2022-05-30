@@ -18,6 +18,8 @@ class Allocator: public MiniDecafBaseVisitor {
     antlrcpp::Any visitAssign(MiniDecafParser::AssignContext *context);
     antlrcpp::Any visitBlock(MiniDecafParser::BlockContext *context);
     antlrcpp::Any visitIdentifier(MiniDecafParser::IdentifierContext *context);
+    antlrcpp::Any visitForLoop(MiniDecafParser::ForLoopContext *context);
+    
     private:
     /*
         Symbol table, which stores function, scope & varible information.

@@ -16,7 +16,7 @@ compound_statement
 
 block_item
     : stmt                                                          # stmt_nop
-    | declaration                                                   # declaration_nop
+    | declaration ';'                                               # declaration_nop
     ;
 
 stmt
@@ -24,10 +24,16 @@ stmt
     | expr? ';'                                                     # expr_nop
     | 'if' '(' expr ')' stmt ('else' stmt)?                         # ifStmt                                                   
     | compound_statement                                            # block_nop
+    // | 'for' '(' expr? ';' expr? ';' expr? ')' stmt                  # forLoop
+    | 'for' '(' (declaration | expr)? ';' (expr)? ';' (expr)?  ')' stmt            # forLoop
+    | 'while' '(' expr ')' stmt                                     # whileLoop
+    | 'do' stmt 'while' '(' expr ')' ';'                            # doWhileLoop
+    | 'break' ';'                                                   # break
+    | 'continue' ';'                                                # continue
     ;
 
 declaration
-    : type Identifier ('=' expr)? ';'                               # declare
+    : type Identifier ('=' expr)?                                   # declare
     ; 
 
 expr

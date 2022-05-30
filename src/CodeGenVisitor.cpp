@@ -380,6 +380,105 @@ antlrcpp::Any CodeGenVisitor::visitBlock(MiniDecafParser::BlockContext *context)
 
 }
 
+antlrcpp::Any CodeGenVisitor::visitForLoop(MiniDecafParser::ForLoopContext *context)
+{
+    blockDepth++;
+    std::string blockName = curFunc;
+    curFunc += "@" + std::to_string(blockOrder) + std::to_string(blockDepth);
+    
+    Label L1 = tr->getNewLabel(); // entry of the begin forloop
+    Label L2 = tr->getNewLabel(); // entry of the body forloop
+    Label L3 = tr->getNewLabel(); // entry of the end forloop
+    breakLabelStack.push(L3);
+    continueLabelStack.push(L2);
+    int base = 0;
+    if (context->declaration()) {
+        visit(context->declaration());
+        base = -1;
+    } else if (context->expr(0)) {
+        visit(context->expr(0));
+    } 
+    tr->genMarkLabel(L1); // start label
+
+    if (context->expr(base+1)){
+        Temp tmpVal = visit(context->expr(base+1)); // 条件跳转
+        tr->genJumpOnZero(L3, tmpVal);
+    }
+    // tr->genJump(L3);  // 条件跳转失败，直接跳出loop
+    visit(context->stmt());
+
+    tr->genMarkLabel(L2);  // continue label
+    if (context->expr(base+2)){
+        visitChildren(context->expr(base+2)); // e.g., i++
+    }
+
+    tr->genJump(L1);
+
+    tr->genMarkLabel(L3);  // break label
+
+    breakLabelStack.pop();
+    continueLabelStack.pop();
+    if (--blockDepth == 0) {
+        ++blockOrder;
+    }
+    int pos = curFunc.find_last_of('@');
+    curFunc = curFunc.substr(0, pos);
+    return nullptr;
+}
+
+antlrcpp::Any CodeGenVisitor::visitWhileLoop(MiniDecafParser::WhileLoopContext *context)
+{
+    Label L1 = tr->getNewLabel(); // entry of the begin forloop
+    // Label L2 = tr->getNewLabel(); // entry of the body forloop
+    Label L3 = tr->getNewLabel(); // entry of the end forloop
+    breakLabelStack.push(L3);
+    continueLabelStack.push(L1);
+
+    tr->genMarkLabel(L1); // start while loop
+    if (context->expr() != nullptr){
+        Temp tmpVal = visit(context->expr()); // 不满足时跳转到结束
+        tr->genJumpOnZero(L3, tmpVal);
+    }
+    // tr->genMarkLabel(L2);
+    visit(context->stmt());
+    tr->genJump(L1);
+    tr->genMarkLabel(L3);
+
+    breakLabelStack.pop();
+    continueLabelStack.pop();
+    return nullptr;
+}
+antlrcpp::Any CodeGenVisitor::visitDoWhileLoop(MiniDecafParser::DoWhileLoopContext *context)
+{
+    Label L1 = tr->getNewLabel(); // entry of the begin forloop
+    Label L3 = tr->getNewLabel(); // entry of the end forloop
+    breakLabelStack.push(L3);
+    continueLabelStack.push(L1);
+
+    tr->genMarkLabel(L1);
+    visit(context->stmt());
+
+    if (context->expr() != nullptr) {
+        Temp tmpVal = visit(context->expr()); // 不满足时跳转到结束
+        tr->genJumpOnZero(L3, tmpVal);
+    }
+    tr->genJump(L1);
+    tr->genMarkLabel(L3);
+
+    breakLabelStack.pop();
+    continueLabelStack.pop();
+    return nullptr;
+}
+antlrcpp::Any CodeGenVisitor::visitBreak(MiniDecafParser::BreakContext *context)
+{
+    tr->genJump(breakLabelStack.top());
+    return nullptr;
+}
+antlrcpp::Any CodeGenVisitor::visitContinue(MiniDecafParser::ContinueContext *context)
+{
+    tr->genJump(continueLabelStack.top());
+    return nullptr;
+}
 
 /* Translates an entire AST into a Piece list.
  *

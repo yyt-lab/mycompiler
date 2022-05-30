@@ -42,6 +42,12 @@ public:
 
     antlrcpp::Any visitBlock(MiniDecafParser::BlockContext *context);
     
+    antlrcpp::Any visitForLoop(MiniDecafParser::ForLoopContext *context);
+    antlrcpp::Any visitWhileLoop(MiniDecafParser::WhileLoopContext *context);
+    antlrcpp::Any visitDoWhileLoop(MiniDecafParser::DoWhileLoopContext *context);
+    antlrcpp::Any visitBreak(MiniDecafParser::BreakContext *context);
+    antlrcpp::Any visitContinue(MiniDecafParser::ContinueContext *context);
+
 
     Piece *translate();
     void DumpIR (std::ostream &os);
@@ -59,6 +65,8 @@ private:
     symTab<Temp> varTab;
     std::unordered_map<std::string, bool> func_ret;
     TransHelper *tr;
+    std::stack<Label> continueLabelStack;
+    std::stack<Label> breakLabelStack;
     /* 
         A simple stack machine model 
         Support basic push, pop1 & pop2 operations
