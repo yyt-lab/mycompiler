@@ -3,17 +3,44 @@
 antlrcpp::Any Allocator::visitProg(MiniDecafParser::ProgContext *context)
 {
     offest = 0;
-    blockDepth=-1;
-    blockOrder=0;
+    // blockDepth=-1;
+    // blockOrder=0;
     visitChildren(context);
     return varTab;
 
 }
+
 antlrcpp::Any Allocator::visitFunc(MiniDecafParser::FuncContext *context)
 {
+    blockDepth=0;
+    // blockDepth=-1;
+    blockOrder=0;
     curFunc = context->Identifier()->getText();
-    // curFunc += "@" + std::to_string(blockOrder) + "@" + std::to_string(blockDepth);
-    visitChildren(context);
+    // 函数定义的情况
+    if (!context->Semicolon()) { 
+        if (funcTable.count(curFunc) > 0 && funcTable[curFunc] == true) { // 重复声明
+            std::cerr << "[ERROR] Redefinition of function " << curFunc << std::endl;
+            exit(1);
+        } else { // 第一次声明
+            funcTable[curFunc] = true;
+            if (context->parameter_list())
+                visit(context->parameter_list());
+            visit(context->compound_statement());
+        }
+    } else {
+        // 函数声明的情况
+        funcTable[curFunc] = false;
+    }
+    // visitChildren(context);
+    return retType::INT;
+}
+
+antlrcpp::Any Allocator::visitParameter_list(MiniDecafParser::Parameter_listContext *context)
+{
+    for (auto i = 0; i < context->Identifier().size(); ++i) {
+        std::string varName = context->Identifier(i)->getText();
+        varTab[curFunc][varName] = nullptr;
+    }
     return retType::INT;
 }
 
@@ -108,4 +135,16 @@ antlrcpp::Any Allocator::visitForLoop(MiniDecafParser::ForLoopContext *context)
     int pos = curFunc.find_last_of('@');
     curFunc = curFunc.substr(0, pos);
     return retType::INT;
+}
+
+
+
+antlrcpp::Any Allocator::visitFuncCall(MiniDecafParser::FuncCallContext *context)
+{
+    std::string funcName = context->Identifier()->getText();
+    if (funcTable[funcName] == false) {
+        std::cerr << "[ERROR] Use of undefined function " << curFunc << "\n";
+        exit(1);
+    }
+    return retType::UNDEF;
 }

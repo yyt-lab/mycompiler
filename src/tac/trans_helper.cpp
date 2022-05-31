@@ -4,8 +4,8 @@
  */
 
 #include "trans_helper.hpp"
-// #include "asm/mach_desc.hpp"
-// #include "asm/offset_counter.hpp"
+#include "mach_desc.hpp"
+#include "offest_counter.hpp"
 // #include "config.hpp"
 // #include "scope/scope.hpp"
 // #include "scope/scope_stack.hpp"
@@ -42,10 +42,12 @@ void TransHelper::chainUp(Tac *t) {
 /* Constructs a tranlsation helper.
  *
  */
-TransHelper::TransHelper() {
+// TransHelper::TransHelper() {
+TransHelper::TransHelper(MachineDesc* md){
+
     // mind_assert(NULL != md);
 
-    // mach = md;
+    mach = md;
     ptail = &head;
     head.next = NULL;
     tacs = tacs_tail = NULL;
@@ -59,9 +61,9 @@ TransHelper::TransHelper() {
  * RETURNS:
  *   the offset counter of the target machine
  */
-// OffsetCounter *TransHelper::getOffsetCounter(void) {
-//     return mach->getOffsetCounter();
-// }
+OffsetCounter *TransHelper::getOffsetCounter(void) {
+    return mach->getOffsetCounter();
+}
 
 /* Allocates a new temporary int32 variable.
  *

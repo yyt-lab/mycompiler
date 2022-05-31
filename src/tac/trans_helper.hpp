@@ -11,6 +11,8 @@
 // #include "define.hpp"
 #include "tac.hpp"
 #include "symbol.hpp"
+#include "offest_counter.hpp"
+#include "riscv_md.hpp"
 
 // #define MIND_TRANSHELPER_DEFINED
 // namespace tac {
@@ -23,10 +25,10 @@
 class TransHelper {
   public:
     // constructor
-    TransHelper();
-    // TransHelper(assembly::MachineDesc *);
+    // TransHelper();
+    TransHelper(MachineDesc *md);
     // gets the offset counter of the target machine
-    // assembly::OffsetCounter *getOffsetCounter(void);
+    OffsetCounter *getOffsetCounter(void);
     // allocates a new int32 temporary variable
     Temp getNewTempI4(void);
     // allocates a new label
@@ -82,7 +84,7 @@ class TransHelper {
 
   private:
     // the machine description
-    // assembly::MachineDesc *mach;
+    MachineDesc *mach;
     // the Piece list
     Piece head, *ptail;
     // the Tac list of a function

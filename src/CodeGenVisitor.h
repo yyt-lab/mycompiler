@@ -48,11 +48,14 @@ public:
     antlrcpp::Any visitBreak(MiniDecafParser::BreakContext *context);
     antlrcpp::Any visitContinue(MiniDecafParser::ContinueContext *context);
 
+    antlrcpp::Any visitFuncCall(MiniDecafParser::FuncCallContext *context);
+    antlrcpp::Any visitParameter_list(MiniDecafParser::Parameter_listContext *context);
+
 
     Piece *translate();
     void DumpIR (std::ostream &os);
 
-    CodeGenVisitor();
+    CodeGenVisitor(MachineDesc *md);
 
 private:
     /*
@@ -63,7 +66,7 @@ private:
     int blockDepth;
     int blockOrder;
     symTab<Temp> varTab;
-    std::unordered_map<std::string, bool> func_ret;
+    std::unordered_map<std::string, Label> funcLabel;
     TransHelper *tr;
     std::stack<Label> continueLabelStack;
     std::stack<Label> breakLabelStack;

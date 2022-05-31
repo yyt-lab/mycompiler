@@ -3,11 +3,15 @@ grammar MiniDecaf;
 import CommonLex;
 
 prog
-    : func EOF
+    : func* EOF
     ;
 
 func
-    : type Identifier '(' ')' compound_statement
+    : type Identifier '(' parameter_list ')' (compound_statement | ';')
+    ;
+
+parameter_list
+    : (type Identifier (',' type Identifier)*)?
     ;
 
 compound_statement
@@ -83,6 +87,11 @@ mul
 
 unary   
     : ('!' | '~' | '-' | '*' | '&') unary                          # unaryOp
+    | postfix                                                      # postfix_nop
+    ;
+
+postfix
+    : Identifier '(' (expr ',')* (expr)? ')'                       # funcCall
     | primary                                                      # primary_nop
     ;
 

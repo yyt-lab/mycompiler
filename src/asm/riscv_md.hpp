@@ -89,6 +89,7 @@ struct RiscvInstr : public Instr {
         LOR,
         XOR,
         ADD,
+        ADDI,
         SUB,
         MUL,
         DIV,
@@ -109,6 +110,7 @@ struct RiscvInstr : public Instr {
         SGT,
         SGE,
         LEQ,
+        CALL,
         // You could add other instructions/pseudo instructions here
     } op_code; // operation code
 
@@ -162,7 +164,10 @@ class RiscvDesc : public MachineDesc {
     void emitUnaryTac(RiscvInstr::OpCode,  Tac *);
     // translates a Binary TAC into assembly instructions
     void emitBinaryTac(RiscvInstr::OpCode,  Tac *);
-
+    
+    // translates a Call TAC into assembly instructions
+    void emitCallTac(Tac *);
+    
     // outputs an instruction
     void emit(std::string, const char *, const char *);
     // outputs a function

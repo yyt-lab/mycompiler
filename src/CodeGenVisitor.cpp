@@ -2,35 +2,47 @@
 #include "Allocator.h"
 #include "error.hpp"
 #include "type.hpp"
+#include "riscv_md.hpp"
+#include "queue"
 
-CodeGenVisitor::CodeGenVisitor()
+CodeGenVisitor::CodeGenVisitor(MachineDesc *md)
 {
-    tr = new TransHelper();
+    tr = new TransHelper(md);
 }
 
 // @brief: Start visiting the syntax tree from root node Prog
 // @ret: Generated asm code
-antlrcpp::Any CodeGenVisitor::visitProg(MiniDecafParser::ProgContext *ctx, symTab<Temp>& symbol_) {
-    // std::cout<<ctx->func()->Identifier()->getText()<<std::endl;
-    // if (ctx->func()->Identifier()->getText() != "main") return "";
+antlrcpp::Any CodeGenVisitor::visitProg(MiniDecafParser::ProgContext *ctx, symTab<Temp>& symbol_) 
+{
     varTab = symbol_;
     visitChildren(ctx);
     return nullptr;
-    // return code_.str();
 }
+
+// three sugars for parameter offset management
+class OffsetCounter;
+#define RESET_OFFSET() tr->getOffsetCounter()->reset(OffsetCounter::PARAMETER)
+#define NEXT_OFFSET(x) tr->getOffsetCounter()->next(OffsetCounter::PARAMETER, x)
 
 antlrcpp::Any CodeGenVisitor::visitFunc(MiniDecafParser::FuncContext *context)
 {
     Function *fun = new Function(context->Identifier()->getText(), BaseType::Int, new Location(-1));
     // attaching function entry label
     curFunc = context->Identifier()->getText();
-    blockDepth = -1;
+    blockDepth = 0;
     blockOrder = 0;
 
-    fun->attachEntryLabel(tr->getNewEntryLabel(fun));
-    tr->startFunc(fun);
+    funcLabel[curFunc] = tr->getNewEntryLabel(fun);
+    fun->attachEntryLabel(funcLabel[curFunc]);
+
+    //arguments
+    RESET_OFFSET();
+    visit(context->parameter_list());
+
     // return visit(context->stmt(0));
-    visitChildren(context);
+    tr->startFunc(fun);
+    visit(context->compound_statement());
+    // visitChildren(context);
     tr->genReturn(tr->genLoadImm4(0)); // Return 0 by default
     tr->endFunc();
     return nullptr;
@@ -45,7 +57,8 @@ antlrcpp::Any CodeGenVisitor::visitPrimary_nop(MiniDecafParser::Primary_nopConte
 // @brief: Visit ReturnStmt node, son of Stmt node
 antlrcpp::Any CodeGenVisitor::visitReturnStmt(MiniDecafParser::ReturnStmtContext *ctx) {
     Temp retVal = visit(ctx->expr());
-    tr->genReturn(retVal); // Return 0 by default
+    if (retVal != nullptr)
+        tr->genReturn(retVal); // Return 0 by default
     
     // tr->endFunc();
     return nullptr;
@@ -501,4 +514,40 @@ void CodeGenVisitor::DumpIR (std::ostream &os)
         os<<std::endl;
         tacPtr = tacPtr->next;
     }
+}
+
+antlrcpp::Any CodeGenVisitor::visitFuncCall(MiniDecafParser::FuncCallContext *context)
+{
+    // return nullptr;
+    // for (auto i = 0; i < context->expr().size(); ++i){
+    //     Temp tmp = visit(context->expr(i));
+    //     tr->genParam(tmp);
+    // }
+    std::queue<Temp> _queue;
+    for (auto i = 0; i < context->expr().size(); ++i){
+        Temp tmp = visit(context->expr(i));
+        _queue.push(tmp);
+        // tr->genParam(tmp);
+    }
+    while (_queue.empty() == false) {
+        tr->genParam(_queue.front());
+        _queue.pop();
+    }
+
+    Temp retVal = tr->genCall(funcLabel[context->Identifier()->getText()]);
+    assert(funcLabel[context->Identifier()->getText()] != NULL);
+    return retVal;
+}
+
+antlrcpp::Any CodeGenVisitor::visitParameter_list(MiniDecafParser::Parameter_listContext *context)
+{
+    for (auto i = 0; i < context->Identifier().size(); ++i) {
+        std::string varName = context->Identifier(i)->getText();
+        // Temp tmp = tr->genLoad();
+        Temp tmp = tr->getNewTempI4();
+        tmp->offset = NEXT_OFFSET(tmp->size);
+        tmp->is_offset_fixed = true;
+        varTab[curFunc][varName] = tmp;
+    }
+    return nullptr;
 }

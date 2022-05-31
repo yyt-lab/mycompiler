@@ -298,11 +298,66 @@ void RiscvDesc::emitTac(Tac *t) {
     case Tac::LES:
         emitBinaryTac(RiscvInstr::SLT, t);
         break;
-    
+
+    case Tac::PARAM:
+        break;
+
+    case Tac::CALL:
+        emitCallTac(t);
+        break;
     default:
         mind_assert(false); // should not appear inside a basic block
     }
 }
+
+void RiscvDesc::emitCallTac(Tac *t) {
+
+    Set<Temp>* liveness = t->LiveOut->clone();
+
+    {
+        int cnt = 0;
+        for(auto temp : *liveness){
+            cnt -= 4;
+            int r1 = getRegForRead(temp, 0, t->LiveOut);
+            addInstr(RiscvInstr::SW,  _reg[r1], _reg[RiscvReg::SP], NULL, cnt, EMPTY_STR, NULL);
+        }
+        addInstr(RiscvInstr::ADDI, _reg[RiscvReg::SP], _reg[RiscvReg::SP], NULL, cnt, EMPTY_STR, NULL);
+    }
+
+    int count = 0;
+    // for(Tac *it = t->prev; it != NULL && it->op_code != Tac::CALL; it = it->prev) {
+    //     if (it -> op_code == Tac::PARAM) count += 4;
+    // }
+    for(Tac *it = t->prev; it != NULL && it->op_code == Tac::PARAM; it = it->prev) count += 4;
+
+    if(count > 0){
+        addInstr(RiscvInstr::ADDI, _reg[RiscvReg::SP], _reg[RiscvReg::SP], NULL, -count, EMPTY_STR, NULL);
+        int cnt = count;
+        for(Tac *it = t->prev; it != NULL && it->op_code == Tac::PARAM; it = it->prev){
+            cnt -= 4;
+            int r1 = getRegForRead(it->op0.var, 0, it->LiveOut);
+            addInstr(RiscvInstr::SW,  _reg[r1], _reg[RiscvReg::SP], NULL, cnt, EMPTY_STR, NULL);
+        }
+    }
+    count += liveness->size() * 4;
+
+    addInstr(RiscvInstr::CALL, NULL, NULL, NULL, 0, std::string("_") + t->op1.label->str_form, NULL);
+    
+    //printf("%d\n", r0);
+    {
+        int cnt = 0;
+        addInstr(RiscvInstr::ADDI, _reg[RiscvReg::SP], _reg[RiscvReg::SP], NULL, count, EMPTY_STR, NULL);
+        for(auto temp: *liveness){
+            cnt -= 4;
+            int r1 = getRegForWrite(temp, 0, 0, t->LiveOut);
+            addInstr(RiscvInstr::LW,  _reg[r1], _reg[RiscvReg::SP], NULL, cnt, EMPTY_STR, NULL);
+        }
+    }
+    
+    int r0 = getRegForWrite(t->op0.var, 0, 0, t->LiveOut);
+    addInstr(RiscvInstr::MOVE, _reg[r0], _reg[RiscvReg::A0], NULL, 0, EMPTY_STR, NULL);
+}
+
 
 /* Translates a LoadImm4 TAC into Riscv instructions.
  *
@@ -454,7 +509,7 @@ void RiscvDesc::emitProlog(Label entry_label, int frame_size) {
     if (entry_label->str_form == "main") {
         oss << "main";
     } else {
-        oss << entry_label;
+        oss << "_"+entry_label->str_form;
     }
     emit(oss.str(), NULL, "function entry"); // marks the function entry label
     oss.str("");
@@ -557,6 +612,10 @@ void RiscvDesc::emitInstr(RiscvInstr *i) {
         oss << "add" << i->r0->name << ", " << i->r1->name << ", " << i->r2->name;
         break;
     
+    case RiscvInstr::ADDI:
+        oss << "addi" << i->r0->name << ", " << i->r1->name << ", " << i->i;
+        break;
+    
     case RiscvInstr::SUB:
         oss << "sub" << i->r0->name << ", " << i->r1->name << ", " << i->r2->name;
         break;
@@ -582,7 +641,9 @@ void RiscvDesc::emitInstr(RiscvInstr *i) {
         oss << "xori\t" << i->r0->name <<", " << i->r0->name << ", " << 1;
         break;
     
-
+    case RiscvInstr::CALL:
+        oss << "call" <<i->l;
+        break;
 
     case RiscvInstr::J:
         oss << "j" << i->l;
@@ -704,7 +765,7 @@ int RiscvDesc::getRegForRead(Temp v, int avoid1, LiveSet *live) {
 
         if (v->is_offset_fixed) {
             RiscvReg *base = _reg[RiscvReg::FP];
-            oss << "load " << v << " from (" << base->name
+            oss << "load T" << v->id << " from (" << base->name
                 << (v->offset < 0 ? "" : "+") << v->offset << ") into "
                 << _reg[i]->name;
             addInstr(RiscvInstr::LW, _reg[i], base, NULL, v->offset, EMPTY_STR,

@@ -31,7 +31,7 @@ int main(int argc, const char* argv[]) {
     // cout<<(parser.func()->toStringTree(true));
     
     MiniDecafParser::ProgContext* treeNode = parser.prog();
-    CodeGenVisitor codeGenVisitor;
+    CodeGenVisitor codeGenVisitor(md);
     Allocator allocator;
     symTab<Temp> varTab = allocator.visitProg(treeNode);
 
