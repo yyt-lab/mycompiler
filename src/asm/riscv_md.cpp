@@ -129,6 +129,17 @@ void RiscvDesc::emitPieces(Piece *ps,
             emitFuncty(ps->as.functy);
             break;
 
+        case Piece::GLOBAL:
+            emit(EMPTY_STR, ".data", NULL);
+            emit(EMPTY_STR, ((std::string)(".global ") + ps->as.globalVar->name).c_str(), NULL);
+            emit(EMPTY_STR, ((std::string)(".size ") + ps->as.globalVar->name + (std::string)(", ") + std::to_string(4)).c_str(), NULL);
+            emit(ps->as.globalVar->name.c_str(), NULL, NULL);
+            if(ps->as.globalVar->value != 0){
+                emit(EMPTY_STR, ((std::string)(".word ") + std::to_string(ps->as.globalVar->value)).c_str(), NULL);
+            }
+            else emit(EMPTY_STR, ((std::string)(".zero ") + std::to_string(4)).c_str(), NULL);
+            break;
+
         default:
             mind_assert(false); // unreachable
             break;
@@ -305,6 +316,19 @@ void RiscvDesc::emitTac(Tac *t) {
     case Tac::CALL:
         emitCallTac(t);
         break;
+    
+    case Tac::LOAD_SYMBOL:
+        emitLoadAddrTac(t);
+        break;
+
+    case Tac::SW:
+        emitStoreTac(t);
+        break;
+    
+    case Tac::LOAD:
+        emitLoadTac(t);
+        break;
+
     default:
         mind_assert(false); // should not appear inside a basic block
     }
@@ -372,6 +396,58 @@ void RiscvDesc::emitLoadImm4Tac(Tac *t) {
     // uses "load immediate number" instruction
     int r0 = getRegForWrite(t->op0.var, 0, 0, t->LiveOut);
     addInstr(RiscvInstr::LI, _reg[r0], NULL, NULL, t->op1.ival, EMPTY_STR,
+             NULL);
+}
+
+/* Translates a LoadAddr TAC into Riscv instructions.
+ *
+ * PARAMETERS:
+ *   t     - the LoadAddr TAC
+ */
+void RiscvDesc::emitLoadAddrTac(Tac *t) {
+    // eliminates useless assignments
+    if (!t->LiveOut->contains(t->op0.var))
+        return;
+
+    // uses "load Address number" instruction
+    int r0 = getRegForWrite(t->op0.var, 0, 0, t->LiveOut);
+    addInstr(RiscvInstr::LA, _reg[r0], NULL, NULL, 0, t->op1.name,
+             NULL);
+}
+
+/* Translates a LoadAddr TAC into Riscv instructions.
+ *
+ * PARAMETERS:
+ *   t     - the LoadAddr TAC
+ */
+void RiscvDesc::emitLoadTac(Tac *t) {
+    // eliminates useless assignments
+    if (!t->LiveOut->contains(t->op0.var))
+        return;
+
+    // uses "load Address number" instruction
+    int r0 = getRegForWrite(t->op0.var, 0, 0, t->LiveOut);
+    int r1 = getRegForRead(t->op1.var, 0, t->LiveOut);
+    addInstr(RiscvInstr::LW, _reg[r0], _reg[r1], NULL, t->op1.offset, EMPTY_STR,
+             NULL);
+}
+
+
+/* Translates a Store TAC into Riscv instructions.
+ *
+ * PARAMETERS:
+ *   t     - the StoreWord TAC
+ */
+void RiscvDesc::emitStoreTac(Tac *t) {
+    // eliminates useless assignments
+    // if (!t->LiveOut->contains(t->op0.var))
+        // return;
+
+    // uses "load Address number" instruction
+    // int r0 = getRegForWrite(t->op0.var, 0, 0, t->LiveOut);
+    int r0 = getRegForRead(t->op0.var,0,t->LiveOut);
+    int r1 = getRegForRead(t->op1.var,0,t->LiveOut);
+    addInstr(RiscvInstr::SW, _reg[r0], _reg[r1], NULL, t->op1.offset, EMPTY_STR,
              NULL);
 }
 
@@ -540,6 +616,10 @@ void RiscvDesc::emitInstr(RiscvInstr *i) {
     
    case RiscvInstr::LI:
         oss << "li" << i->r0->name << ", " << i->i;
+        break;
+    
+    case RiscvInstr::LA:
+        oss << "la" << i->r0->name << ", " << i->l;
         break;
 
     case RiscvInstr::NEG:

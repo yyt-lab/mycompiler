@@ -3,7 +3,7 @@ grammar MiniDecaf;
 import CommonLex;
 
 prog
-    : func* EOF
+    : (func | decl_global ';')* EOF
     ;
 
 func
@@ -34,6 +34,10 @@ stmt
     | 'do' stmt 'while' '(' expr ')' ';'                            # doWhileLoop
     | 'break' ';'                                                   # break
     | 'continue' ';'                                                # continue
+    ;
+
+decl_global
+    : type Identifier ('=' expr)?                                   # globalVar
     ;
 
 declaration

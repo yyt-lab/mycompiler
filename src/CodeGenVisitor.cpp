@@ -274,6 +274,7 @@ antlrcpp::Any CodeGenVisitor::visitAssign(MiniDecafParser::AssignContext *contex
     std::string blockName = curFunc; 
     Temp val = nullptr;
     Temp dst = nullptr;
+    val = visit(context->expr());
 
     for (int i=blockDepth; i>=0; i--) {
         if (varTab[blockName].count(varName) == 0 || varTab[blockName][varName] == nullptr) {
@@ -284,11 +285,15 @@ antlrcpp::Any CodeGenVisitor::visitAssign(MiniDecafParser::AssignContext *contex
         dst = varTab[blockName][varName];
         break;
     }
+    if (dst != nullptr) {
+        tr->genAssign(dst, val);
+    }
 
-    val = visit(context->expr());
+    if (dst == nullptr && GlobalTab[varName] == true) {
+        Temp dst = tr->genLoadSymbol(varName);
+        tr->genStore(val, dst, 0);
+    }
     // dst = varTab[curFunc][varName];
-    tr->genAssign(dst, val);
-
     return dst;
 
 }
@@ -307,6 +312,12 @@ antlrcpp::Any CodeGenVisitor::visitIdentifier(MiniDecafParser::IdentifierContext
         }
         dst = varTab[blockName][varName];
         break;
+    }
+
+    if (dst == nullptr && GlobalTab[varName] == true) {
+        // dst = tr->genLoadSymbol(varName);
+        Temp tmp = tr->genLoadSymbol(varName);
+        dst = tr->genLoad(tmp, 0);
     }
     
     return dst;
@@ -493,28 +504,6 @@ antlrcpp::Any CodeGenVisitor::visitContinue(MiniDecafParser::ContinueContext *co
     return nullptr;
 }
 
-/* Translates an entire AST into a Piece list.
- *
- * PARAMETERS:
- *   tree  - the AST
- * RETURNS:
- *   the result Piece list (represented by the first node)
- */
-Piece *CodeGenVisitor::translate() 
-{
-    // TransHelper *helper = new TransHelper(md);
-    return tr->getPiece();
-}
-
-void CodeGenVisitor::DumpIR (std::ostream &os)
-{
-    Tac* tacPtr = tr->getTac();
-    while(tacPtr != NULL) {
-        tacPtr->dump(os);
-        os<<std::endl;
-        tacPtr = tacPtr->next;
-    }
-}
 
 antlrcpp::Any CodeGenVisitor::visitFuncCall(MiniDecafParser::FuncCallContext *context)
 {
@@ -550,4 +539,49 @@ antlrcpp::Any CodeGenVisitor::visitParameter_list(MiniDecafParser::Parameter_lis
         varTab[curFunc][varName] = tmp;
     }
     return nullptr;
+}
+
+antlrcpp::Any CodeGenVisitor::visitGlobalVar(MiniDecafParser::GlobalVarContext *context)
+{
+    std::string varName = context->Identifier()->getText();
+    Temp tmp;
+    if (context->expr()) {
+        Temp val = visitChildren(context->expr());
+        // Temp dst = varTab[curFunc][varName];
+        tr->genGlobalVarible(varName, std::stoi(context->expr()->getText()));
+    } else {
+        tr->genGlobalVarible(varName, 0);
+    }
+    GlobalTab[varName] = true;
+    // varTab["global"][varName] = 
+    // if (context->expr()) {
+    //     Temp val = visitChildren(context->expr());
+    //     Temp dst = varTab[curFunc][varName];
+    //     tr->genAssign(dst, val);
+    // }
+    return nullptr;
+
+}
+
+/* Translates an entire AST into a Piece list.
+ *
+ * PARAMETERS:
+ *   tree  - the AST
+ * RETURNS:
+ *   the result Piece list (represented by the first node)
+ */
+Piece *CodeGenVisitor::translate() 
+{
+    // TransHelper *helper = new TransHelper(md);
+    return tr->getPiece();
+}
+
+void CodeGenVisitor::DumpIR (std::ostream &os)
+{
+    Tac* tacPtr = tr->getTac();
+    while(tacPtr != NULL) {
+        tacPtr->dump(os);
+        os<<std::endl;
+        tacPtr = tacPtr->next;
+    }
 }

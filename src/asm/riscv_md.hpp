@@ -100,6 +100,7 @@ struct RiscvInstr : public Instr {
         RET,
         LW,
         LI,
+        LA,
         SW,
         MOVE,
         NOT, //BNOT
@@ -160,6 +161,12 @@ class RiscvDesc : public MachineDesc {
     void emitTac(Tac *);
     // translates a LoadImm4 TAC into assembly instructions
     void emitLoadImm4Tac(Tac *);
+    // translates a LoadAddr TAC into assembly instructions
+    void emitLoadAddrTac(Tac *t);
+    // translates a Store TAC into assembly instructions
+    void emitStoreTac(Tac *t);
+    // translates a Load TAC into assembly instructions
+    void emitLoadTac(Tac *t);
     // translates a Unary TAC into assembly instructions
     void emitUnaryTac(RiscvInstr::OpCode,  Tac *);
     // translates a Binary TAC into assembly instructions

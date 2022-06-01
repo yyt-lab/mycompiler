@@ -51,6 +51,8 @@ public:
     antlrcpp::Any visitFuncCall(MiniDecafParser::FuncCallContext *context);
     antlrcpp::Any visitParameter_list(MiniDecafParser::Parameter_listContext *context);
 
+    antlrcpp::Any visitGlobalVar(MiniDecafParser::GlobalVarContext *context);
+
 
     Piece *translate();
     void DumpIR (std::ostream &os);
@@ -66,6 +68,7 @@ private:
     int blockDepth;
     int blockOrder;
     symTab<Temp> varTab;
+    std::unordered_map<std::string, bool> GlobalTab;
     std::unordered_map<std::string, Label> funcLabel;
     TransHelper *tr;
     std::stack<Label> continueLabelStack;

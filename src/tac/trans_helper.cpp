@@ -512,6 +512,12 @@ Temp TransHelper::genLoad(Temp temp, int offset){
     return c;
 }
 
+void TransHelper::genStore(Temp src, Temp base, int offset){
+    // Temp c = getNewTempI4();
+    chainUp(Tac::Store(src, base, offset));
+    // return c;
+}
+
 /* Appends a MarkLabel tac node to the current list.
  *
  * PARAMETERS:

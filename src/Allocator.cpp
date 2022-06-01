@@ -70,6 +70,10 @@ antlrcpp::Any Allocator::visitAssign(MiniDecafParser::AssignContext *context)
         find = true;
     }
 
+    if (find == false && varTab["global"].count(varName) > 0 ) {
+        find = true;
+    }
+
     if (find == false) {
         std::cerr<<"undefined variable name :"<<varName<<std::endl;
         assert(0);
@@ -115,6 +119,10 @@ antlrcpp::Any Allocator::visitIdentifier(MiniDecafParser::IdentifierContext *con
         find = true;
     }
 
+    if (find == false && varTab["global"].count(varName) > 0 ) {
+        find = true;
+    }
+    
     if (find == false) {
         std::cerr<<"undefined variable name :"<<varName<<std::endl;
         assert(0);
@@ -148,3 +156,15 @@ antlrcpp::Any Allocator::visitFuncCall(MiniDecafParser::FuncCallContext *context
     }
     return retType::UNDEF;
 }
+
+antlrcpp::Any Allocator::visitGlobalVar(MiniDecafParser::GlobalVarContext *context)
+{
+    std::string varName = context->Identifier()->getText();
+    if (varTab["global"].count(varName) > 0) {
+        std::cerr << "[ERROR] Redefinition of global variable " << varName << "\n";
+        exit(1);
+    }
+    varTab["global"][varName] = nullptr;
+    return retType::INT;
+}
+
