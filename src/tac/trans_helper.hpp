@@ -42,6 +42,9 @@ class TransHelper {
 
     void genGlobalVarible(std::string, int);
 
+    void genGlobalArray(std::string name, int* value, int Initlength, int dim);
+
+
     // Arithmetic
     Temp genAdd(Temp, Temp);
     Temp genSub(Temp, Temp);
@@ -77,6 +80,8 @@ class TransHelper {
     Temp genLoad(Temp, int);
     // Temp genStore(Temp, int);
     void genStore(Temp src, Temp base, int offset);
+    Temp allocNewTempI4(int size);
+
 
     void genMarkLabel(Label);
     void genMemo(const char *);

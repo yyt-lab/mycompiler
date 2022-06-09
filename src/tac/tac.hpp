@@ -70,6 +70,7 @@ struct Tac {
     typedef enum {
         ASSIGN,
         ADD,
+        ALLOC,
         SUB,
         MUL,
         DIV,
@@ -154,6 +155,8 @@ struct Tac {
     static Tac *Memo(const char *);
     static Tac *Call(Temp dest, Label label);
     static Tac *Param(Temp dest);
+    static Tac *Alloc(Temp dest, int num);
+
 
     // dumps a single tac node to some output stream
     void dump(std::ostream &);
@@ -172,6 +175,13 @@ typedef struct GlobalObject {
     int value;
 } *GlobalVar;
 
+typedef struct GlobalArrayObject {
+    std::string name;   
+    int* InitialValue;
+    int InitialSize;
+    int size;
+} *GlobalArray;
+
 /** Representation of the whole program.
  *
  *  NOTE: 
@@ -186,13 +196,15 @@ struct Piece {
     // kind of this Piece node
     enum {
         FUNCTY,
-        GLOBAL
+        GLOBAL,
+        GLOBALARRAY
     } kind;
 
     // data of this Piece node
     union {
         Functy functy;
         GlobalVar globalVar;
+        GlobalArray globalArray;
     } as;
 
     // next Piece node

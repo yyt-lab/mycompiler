@@ -200,6 +200,18 @@ void TransHelper::genGlobalVarible(std::string name, int value) {
     ptail->as.globalVar->value = value;
 }
 
+void TransHelper::genGlobalArray(std::string name, int* value, int Initlength, int size) {
+    ptail = ptail->next = new Piece();
+    ptail->kind = Piece::GLOBALARRAY;
+    ptail->as.globalArray = new GlobalArrayObject();
+    ptail->as.globalArray->name = name;
+    ptail->as.globalArray->InitialSize = Initlength;
+    ptail->as.globalArray->size = size;
+    ptail->as.globalArray->InitialValue = (int*) malloc(sizeof(int) * Initlength);
+    for (int i=0; i<Initlength; i++) {
+        *(ptail->as.globalArray->InitialValue+i) = value[i];
+    }
+}
 /* Appends an Add tac node to the current list.
  *
  * PARAMETERS:
@@ -506,6 +518,7 @@ Temp TransHelper::genLoadSymbol(std::string label){
     return c;
 }
 
+// 将temp中地址对应的数据，加载到c中
 Temp TransHelper::genLoad(Temp temp, int offset){
     Temp c = getNewTempI4();
     chainUp(Tac::Load(c, temp, offset));
@@ -516,6 +529,13 @@ void TransHelper::genStore(Temp src, Temp base, int offset){
     // Temp c = getNewTempI4();
     chainUp(Tac::Store(src, base, offset));
     // return c;
+}
+
+//数组分配内存
+Temp TransHelper::allocNewTempI4(int size) {
+    Temp v = getNewTempI4();
+    chainUp(Tac::Alloc(v, size));
+    return v;
 }
 
 /* Appends a MarkLabel tac node to the current list.

@@ -587,6 +587,16 @@ Tac *Tac::Param(Temp dest) {
     return t;
 }
 
+Tac *Tac::Alloc(Temp dest, int num) {
+    REQUIRE_I4(dest);
+
+    Tac *t = allocateNewTac(Tac::ALLOC);
+    t->op0.var = dest;
+    t->op1.size = num;
+    
+    return t;
+}
+
 /* Creates a Return tac.
  *
  * NOTE:
@@ -815,7 +825,10 @@ void Tac::dump(std::ostream &os) {
     case SW:
         os << "    ADDR " <<"("<< op1.var <<"+" << op1.offset<< ") = STORE " << op0.var; 
         break;
-
+        
+    case ALLOC:
+        os << "    " << op0.var << " = ALLOC " << op1.size;
+        break;
     default:
         mind_assert(false); // unreachable
         break;

@@ -53,6 +53,9 @@ public:
 
     antlrcpp::Any visitGlobalVar(MiniDecafParser::GlobalVarContext *context);
 
+    antlrcpp::Any visitArrayIndex(MiniDecafParser::ArrayIndexContext *context);
+    antlrcpp::Any visitGlobalArrayDeclare(MiniDecafParser::GlobalArrayDeclareContext *context);
+    antlrcpp::Any visitArrayDeclare(MiniDecafParser::ArrayDeclareContext *context);
 
     Piece *translate();
     void DumpIR (std::ostream &os);

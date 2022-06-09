@@ -4,6 +4,7 @@
 #include "type.hpp"
 #include "riscv_md.hpp"
 #include "queue"
+#include "vector"
 
 CodeGenVisitor::CodeGenVisitor(MachineDesc *md)
 {
@@ -263,38 +264,89 @@ antlrcpp::Any CodeGenVisitor::visitDeclare(MiniDecafParser::DeclareContext *cont
         tr->genAssign(dst, val);
     }
     return nullptr;
-
-    // return 
 }
 
 antlrcpp::Any CodeGenVisitor::visitAssign(MiniDecafParser::AssignContext *context)
 {
+    // 变量
     std::string varName = context->Identifier()->getText();
-
-    std::string blockName = curFunc; 
     Temp val = nullptr;
     Temp dst = nullptr;
-    val = visit(context->expr());
+    std::string blockName = curFunc;   
+    if (context->Lbrkt(0) == nullptr) {
+        val = visit(context->expr(0));
 
-    for (int i=blockDepth; i>=0; i--) {
-        if (varTab[blockName].count(varName) == 0 || varTab[blockName][varName] == nullptr) {
-            int index = blockName.find_last_of('@');
-            blockName = blockName.substr(0,index);
-            continue;
+        for (int i=blockDepth; i>=0; i--) {
+            if (varTab[blockName].count(varName) == 0 || varTab[blockName][varName] == nullptr) {
+                int index = blockName.find_last_of('@');
+                blockName = blockName.substr(0,index);
+                continue;
+            }
+            dst = varTab[blockName][varName];
+            break;
         }
-        dst = varTab[blockName][varName];
-        break;
-    }
-    if (dst != nullptr) {
-        tr->genAssign(dst, val);
-    }
+        if (dst != nullptr) {
+            tr->genAssign(dst, val);
+        }
 
-    if (dst == nullptr && GlobalTab[varName] == true) {
-        Temp dst = tr->genLoadSymbol(varName);
-        tr->genStore(val, dst, 0);
+        if (dst == nullptr && GlobalTab[varName] == true) {
+            Temp dst = tr->genLoadSymbol(varName);
+            tr->genStore(val, dst, 0);
+        }
+    } 
+    else { // 数组
+        std::string arrayName = context->Identifier()->getText();
+        std::vector<int> dimVal;
+        // ArraySymType arType = Allocator::getInstance().arrayTable[curFunc][arrayName];
+        symTab<ArraySymType> arrayTable= Allocator::getInstance().arrayTable;
+        ArraySymType arType{0};
+
+        // 寻找数组定义
+        for (int i=blockDepth; i>=0; i--) {
+            if (arrayTable[blockName].count(arrayName) == 0 || arrayTable[blockName][arrayName].getSize() == 0) {
+                int index = blockName.find_last_of('@');
+                blockName = blockName.substr(0,index);
+                continue;
+            }
+            arType = arrayTable[blockName][arrayName];
+            break;
+        }
+
+        if (arType.getSize() != 0){ // 局部数组
+            dimVal = arType.getDim();
+        } else {  // 全局数组
+            ArraySymType globalArType= Allocator::getInstance().arrayTable["global"][arrayName];
+            dimVal = globalArType.getDim();
+        }
+        // 偏移参数tmp
+        Temp tmp = visit(context->expr(0));
+        int i;
+        for (i=1; i< context->expr().size()-1; i++) {
+            Temp k = tr->genLoadImm4(dimVal[i]);  // 因子
+            tmp = tr->genMul(tmp, k);  // 相乘
+            Temp t = visit(context->expr(i)); 
+            tmp = tr->genAdd(tmp, t);  // 相加
+        }
+        Temp k = tr->genLoadImm4(4);
+        tmp = tr->genMul(tmp, k);
+        // 右值的value
+        val = visit(context->expr(i));
+
+        // 赋值
+        if (arType.getSize() != 0){ // 局部数组
+            Temp startNode = arType.getStartNode();
+            tmp = tr->genAdd(startNode, tmp);
+            tr->genStore(val, tmp, 0);
+        } else {
+            Temp dst = tr->genLoadSymbol(arrayName);
+            tmp = tr->genAdd(dst, tmp);
+            tr->genStore(val, tmp, 0);
+        }
+
+
     }
-    // dst = varTab[curFunc][varName];
-    return dst;
+   
+    return val;
 
 }
 
@@ -395,7 +447,7 @@ antlrcpp::Any CodeGenVisitor::visitBlock(MiniDecafParser::BlockContext *context)
     for (auto item : context->block_item()) {
         visit(item);
     }
-    if (--blockDepth == 0) {
+    if (--blockDepth == 1) {
         ++blockOrder;
     }
     int pos = curFunc.find_last_of('@');
@@ -560,9 +612,76 @@ antlrcpp::Any CodeGenVisitor::visitGlobalVar(MiniDecafParser::GlobalVarContext *
     //     tr->genAssign(dst, val);
     // }
     return nullptr;
+}
+// 右值访问数组
+antlrcpp::Any CodeGenVisitor::visitArrayIndex(MiniDecafParser::ArrayIndexContext *context)
+{
+    std::string arrayName = context->Identifier()->getText();
+    std::vector<int> dimVal;
+    symTab<ArraySymType> arrayTable= Allocator::getInstance().arrayTable;
+    ArraySymType arType{0};
+    // ArraySymType arType= Allocator::getInstance().arrayTable[curFunc][arrayName];
+    Temp ret = nullptr;
+    std::string blockName = curFunc; 
+    
+    for (int i=blockDepth; i>=0; i--) {
+        if (arrayTable[blockName].count(arrayName) == 0 || arrayTable[blockName][arrayName].getSize() == 0 ) {
+            int index = blockName.find_last_of('@');
+            blockName = blockName.substr(0,index);
+            continue;
+        }
+        arType = arrayTable[blockName][arrayName];
+        break;
+    }
 
+    if (arType.getSize() != 0){ // 局部数组
+        dimVal = arType.getDim();
+    } else {  // 全局数组
+        ArraySymType globalArType= Allocator::getInstance().arrayTable["global"][arrayName];
+        dimVal = globalArType.getDim();
+    }
+    // 偏移参数tmp
+    Temp tmp = visit(context->expr(0));
+    int i;
+    for (i=1; i< context->expr().size(); i++) {
+        Temp k = tr->genLoadImm4(dimVal[i]);  // 因子
+        tmp = tr->genMul(tmp, k);  // 相乘
+        Temp t = visit(context->expr(i)); 
+        tmp = tr->genAdd(tmp, t);  // 相加
+    }
+    Temp k = tr->genLoadImm4(4);
+    tmp = tr->genMul(tmp, k);
+
+    // 赋值
+    if (arType.getSize() != 0){ // 局部数组
+        Temp startNode = arType.getStartNode();
+        tmp = tr->genAdd(startNode, tmp);
+        ret = tr->genLoad(tmp, 0);
+    } else {
+        Temp dst = tr->genLoadSymbol(arrayName);
+        tmp = tr->genAdd(dst, tmp);
+        ret = tr->genLoad(tmp, 0);
+    }
+    return ret;
+}
+// 全局数组声明
+antlrcpp::Any CodeGenVisitor::visitGlobalArrayDeclare(MiniDecafParser::GlobalArrayDeclareContext *context)
+{
+    std::string arrayName = context->Identifier()->getText();
+    ArraySymType arType= Allocator::getInstance().arrayTable["global"][arrayName];
+    tr->genGlobalArray(arrayName, nullptr, 0, arType.getSize());
+    return nullptr;
 }
 
+// 局部数组
+antlrcpp::Any CodeGenVisitor::visitArrayDeclare(MiniDecafParser::ArrayDeclareContext *context)
+{
+    std::string arrayName = context->Identifier()->getText();
+    ArraySymType arType= Allocator::getInstance().arrayTable[curFunc][arrayName];
+    Temp tmp = tr->allocNewTempI4(arType.getSize());
+    Allocator::getInstance().arrayTable[curFunc][arrayName].setStartNode(tmp);
+    return nullptr;
+}
 /* Translates an entire AST into a Piece list.
  *
  * PARAMETERS:

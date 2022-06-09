@@ -38,10 +38,12 @@ stmt
 
 decl_global
     : type Identifier ('=' expr)?                                   # globalVar
+    | type Identifier ('[' Interger ']')* ('=' expr)?               # globalArrayDeclare
     ;
 
 declaration
     : type Identifier ('=' expr)?                                   # declare
+    | type Identifier ('[' Interger ']')* ('=' expr)?               # arrayDeclare
     ; 
 
 expr
@@ -51,7 +53,8 @@ expr
 
 assign_op
     : conditional                                                   # conditional_nop
-    | Identifier '=' expr                                           # assign
+    | Identifier ('[' expr ']')* '=' expr                           # assign
+    // | unary '=' expr                                                # assign
     ;
 
 conditional
@@ -96,7 +99,9 @@ unary
 
 postfix
     : Identifier '(' (expr ',')* (expr)? ')'                       # funcCall
+    // | postfix '[' expr ']'                                         # arrayIndex
     | primary                                                      # primary_nop
+    | Identifier ('[' expr ']')*                                   # arrayIndex
     ;
 
 primary

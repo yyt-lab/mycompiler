@@ -140,6 +140,16 @@ void RiscvDesc::emitPieces(Piece *ps,
             else emit(EMPTY_STR, ((std::string)(".zero ") + std::to_string(4)).c_str(), NULL);
             break;
 
+        case Piece::GLOBALARRAY:
+            emit(EMPTY_STR, ".data", NULL);
+            emit(EMPTY_STR, ((std::string)(".global ") + ps->as.globalArray->name).c_str(), NULL);
+            emit(EMPTY_STR, ((std::string)(".size ") + ps->as.globalArray->name + (std::string)(", ") + std::to_string(ps->as.globalArray->size)).c_str(), NULL);
+            emit(ps->as.globalVar->name.c_str(), NULL, NULL);
+            // if(ps->as.globalVar->value != 0){
+            //     emit(EMPTY_STR, ((std::string)(".word ") + std::to_string(ps->as.globalVar->value)).c_str(), NULL);
+            // }
+            emit(EMPTY_STR, ((std::string)(".zero ") + std::to_string(ps->as.globalArray->size)).c_str(), NULL);
+            break;
         default:
             mind_assert(false); // unreachable
             break;
@@ -329,6 +339,10 @@ void RiscvDesc::emitTac(Tac *t) {
         emitLoadTac(t);
         break;
 
+    case Tac::ALLOC:
+        emitAllocTac(t);
+        break;
+
     default:
         mind_assert(false); // should not appear inside a basic block
     }
@@ -426,10 +440,16 @@ void RiscvDesc::emitLoadTac(Tac *t) {
         return;
 
     // uses "load Address number" instruction
-    int r0 = getRegForWrite(t->op0.var, 0, 0, t->LiveOut);
     int r1 = getRegForRead(t->op1.var, 0, t->LiveOut);
+    int r0 = getRegForWrite(t->op0.var, 0, 0, t->LiveOut);
     addInstr(RiscvInstr::LW, _reg[r0], _reg[r1], NULL, t->op1.offset, EMPTY_STR,
              NULL);
+
+        // uses "load immediate number" instruction
+    // int r1 = getRegForRead(t->op1.var, 0, t->LiveOut);
+    // int r0 = getRegForWrite(t->op0.var, r1, 0, t->LiveOut);
+    // addInstr(RiscvInstr::LW, _reg[r0], _reg[r1], NULL, t->op1.offset, EMPTY_STR,
+    //          NULL);
 }
 
 
@@ -487,6 +507,14 @@ void RiscvDesc::emitBinaryTac(RiscvInstr::OpCode op, Tac *t) {
     addInstr(op, _reg[r0], _reg[r1], _reg[r2], 0, EMPTY_STR, NULL);
 }
 
+void RiscvDesc::emitAllocTac(Tac *t) {
+    if (!t->LiveOut->contains(t->op0.var))
+        return;
+    int r0 = getRegForWrite(t->op0.var, 0, 0, t->LiveOut);
+    addInstr(RiscvInstr::ADDI, _reg[RiscvReg::SP], _reg[RiscvReg::SP], NULL, -t->op1.size, EMPTY_STR, NULL);
+    addInstr(RiscvInstr::MOVE, _reg[r0], _reg[RiscvReg::SP], NULL, 0, EMPTY_STR, NULL);
+}
+
 /* Outputs a single instruction line.
  *
  * PARAMETERS:
@@ -523,7 +551,7 @@ void RiscvDesc::emitFuncty(Functy f) {
 
     _frame = new RiscvStackFrameManager(-3 * WORD_SIZE);
     FlowGraph *g = FlowGraph::makeGraph(f);
-    // g->simplify();        // simple optimization
+    g->simplify();        // simple optimization
     g->analyzeLiveness(); // computes LiveOut set of the basic blocks
 
     for (FlowGraph::iterator it = g->begin(); it != g->end(); ++it) {
@@ -852,7 +880,7 @@ int RiscvDesc::getRegForRead(Temp v, int avoid1, LiveSet *live) {
                      oss.str().c_str());
 
         } else {
-            oss << "initialize " << v << " with 0";
+            oss << "initialize T" << v->id << " with 0";
             addInstr(RiscvInstr::MOVE, _reg[i], _reg[RiscvReg::ZERO], NULL, 0,
                      EMPTY_STR, oss.str().c_str());
         }

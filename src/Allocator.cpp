@@ -57,27 +57,27 @@ antlrcpp::Any Allocator::visitDeclare(MiniDecafParser::DeclareContext *context)
 
 antlrcpp::Any Allocator::visitAssign(MiniDecafParser::AssignContext *context)
 {
-    std::string varName = context->Identifier()->getText();
-    bool find = false;
-    std::string blockName = curFunc; 
-    for (int i=blockDepth; i>=0; i--) {
-        // if (varTab[blockName].count(varName) == 0) {
-        if (varTab[blockName].find(varName) == varTab[blockName].end() ) {
-            int index = blockName.find_last_of('@');
-            blockName = blockName.substr(0,index);
-            continue;
-        }
-        find = true;
-    }
+    // std::string varName = context->Identifier()->getText();
+    // bool find = false;
+    // std::string blockName = curFunc; 
+    // for (int i=blockDepth; i>=0; i--) {
+    //     // if (varTab[blockName].count(varName) == 0) {
+    //     if (varTab[blockName].find(varName) == varTab[blockName].end() ) {
+    //         int index = blockName.find_last_of('@');
+    //         blockName = blockName.substr(0,index);
+    //         continue;
+    //     }
+    //     find = true;
+    // }
 
-    if (find == false && varTab["global"].count(varName) > 0 ) {
-        find = true;
-    }
+    // if (find == false && varTab["global"].count(varName) > 0 ) {
+    //     find = true;
+    // }
 
-    if (find == false) {
-        std::cerr<<"undefined variable name :"<<varName<<std::endl;
-        assert(0);
-    }
+    // if (find == false) {
+    //     std::cerr<<"undefined variable name :"<<varName<<std::endl;
+    //     assert(0);
+    // }
     return retType::INT;
 }
 
@@ -168,3 +168,45 @@ antlrcpp::Any Allocator::visitGlobalVar(MiniDecafParser::GlobalVarContext *conte
     return retType::INT;
 }
 
+// antlrcpp::Any Allocator::visitArrayIndex(MiniDecafParser::ArrayIndexContext *context)
+// {
+//     return retType::INT;
+// }
+antlrcpp::Any Allocator::visitGlobalArrayDeclare(MiniDecafParser::GlobalArrayDeclareContext *context)
+{
+    std::string globalArrayName = context->Identifier()->getText();
+    // Allocator::getInstance().arrayTable["global"].count(globalArrayName) 
+    if (Allocator::getInstance().arrayTable["global"].count(globalArrayName)  != 0) {
+        std::cerr<<"multi_define_Array :"<<globalArrayName<<std::endl;
+    }
+
+    int falttenDim = 1;
+    ArraySymType ar{1};
+    for (int i=0; i<context->Interger().size(); i++) {
+        int curDim = std::atoi((context->Interger(i)->getText()).c_str());
+        falttenDim *= curDim;
+        ar.setDim(i, curDim);
+    }
+    ar.setSize(falttenDim*4);
+    Allocator::getInstance().arrayTable["global"][globalArrayName] = ar;
+    return retType::INT;
+}
+antlrcpp::Any Allocator::visitArrayDeclare(MiniDecafParser::ArrayDeclareContext *context)
+{
+    std::string arrayName = context->Identifier()->getText();
+    if (Allocator::getInstance().arrayTable[curFunc].count(arrayName) != 0) {
+        std::cerr<<"multi_define_Array :"<<arrayName<<std::endl;
+    }
+
+    int falttenDim = 1;
+    ArraySymType ar{1};
+    for (int i=0; i<context->Interger().size(); i++) {
+        int curDim = std::atoi((context->Interger(i)->getText()).c_str());
+        falttenDim *= curDim;
+        ar.setDim(i, curDim);
+    }
+
+    ar.setSize(falttenDim*4);
+    Allocator::getInstance().arrayTable[curFunc][arrayName] = ar;
+    return retType::INT;
+}
