@@ -1,28 +1,28 @@
-/*****************************************************
- *  Garbage-collectable Data Structure: Vector.
- *
- *  NOTE: just treat it like std::vector.
- *
- *  Keltin Leung 
- */
-#pragma once
-// #ifndef __MIND_VECTOR__
-// #define __MIND_VECTOR__
+// /*****************************************************
+//  *  Garbage-collectable Data Structure: Vector.
+//  *
+//  *  NOTE: just treat it like std::vector.
+//  *
+//  *  Keltin Leung 
+//  */
+// #pragma once
+// // #ifndef __MIND_VECTOR__
+// // #define __MIND_VECTOR__
 
-#include "boehmgc.hpp"
+// #include "boehmgc.hpp"
 
-#include <vector>
+// #include <vector>
 
-// namespace mind {
+// // namespace mind {
 
-//   namespace util {
+// //   namespace util {
 
-	// Vector (garbage-collectable version)
-	template <typename _T>
-	class Vector : public std::vector<_T, gc_allocator<_T> > {
-	};
+// 	// Vector (garbage-collectable version)
+// 	template <typename _T>
+// 	class Vector : public std::vector<_T, gc_allocator<_T> > {
+// 	};
 
-//   }  
-// }
+// //   }  
+// // }
 
-// #endif // __MIND_VECTOR__
+// // #endif // __MIND_VECTOR__
