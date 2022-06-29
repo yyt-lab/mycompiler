@@ -44,6 +44,8 @@ int main(int argc, const char* argv[]) {
     // result << std::endl;
     // result.flush();
     md->emitPieces(ir, outFile);
+
+
     return 0;
 
     // We get the asm code!

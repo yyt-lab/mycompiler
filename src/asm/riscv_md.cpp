@@ -574,8 +574,8 @@ void RiscvDesc::emitFuncty(Functy f) {
         b->mark = 0; // clears the marks (for the next step)
     }
     // if (Option::getLevel() == Option::DATAFLOW) {
-    //     std::cout << "Control-flow Graph of " << f->entry << ":" << std::endl;
-    //     g->dump(std::cout);
+        std::cout << "Control-flow Graph of " << f->entry->str_form << ":" << std::endl;
+        g->dump(std::cout);
     //     // TO STUDENTS: You might not want to get lots of outputs when
     //     // debugging.
     //     //              You can enable the following line so that the program

@@ -13,9 +13,6 @@
 #include "error.hpp"
 #include "tac.hpp"
 #include "flow_graph.hpp"
-// using namespace mind;
-// using namespace mind::tac;
-// using namespace mind::util;
 
 // temp variable comparator
 struct temp_less {
@@ -38,9 +35,9 @@ std::ostream &operator<<(std::ostream &os, Set<Temp> *s) {
         Temp *buf = new Temp[sz];
         std::copy(s->begin(), s->end(), buf);
         std::sort(buf, buf + sz, temp_less());
-        os << buf[0];
+        os <<"T"<< buf[0]->id;
         for (size_t i = 1; i < sz; ++i)
-            os << " " << buf[i];
+            os << " T" << buf[i]->id;
     }
     os << "]";
 
@@ -84,8 +81,11 @@ void BasicBlock::dump(std::ostream &os) {
     os << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << std::endl;
 
     // prints the tacs
-    for (Tac *t = tac_chain; t != NULL; t = t->next)
-        os << "| " << t;
+    for (Tac *t = tac_chain; t != NULL; t = t->next){
+        os << "| ";
+        t->dump(std::cout);
+        os<<std::endl;
+    }
 
     os << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << std::endl;
 
@@ -96,13 +96,13 @@ void BasicBlock::dump(std::ostream &os) {
         break;
 
     case BY_JZERO:
-        os << "*   END BY JZERO, if " << var << " = " << std::endl;
+        os << "*   END BY JZERO, if T" << var->id << " = " << std::endl;
         os << "*      0: goto " << next[0] << "; 1: goto " << next[1]
            << std::endl;
         break;
 
     case BY_RETURN:
-        os << "*   END BY RETURN, result = " << var << std::endl;
+        os << "*   END BY RETURN, result = T" << var->id << std::endl;
         break;
     }
     os << "===============================================" << std::endl;

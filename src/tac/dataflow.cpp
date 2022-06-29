@@ -260,8 +260,14 @@ void BasicBlock::analyzeLiveness(void) {
                                 // appear inside
             break;
         }
-        // if (!t->LiveOut->contains(t->op0.var) && t->op_code!=Tac::CALL) {
-        //     t->prev->next = t->next;
-        // }
+
+        if (!t->LiveOut->contains(t->op0.var) && t->op_code!=Tac::CALL &&  t->op_code!=Tac::LOAD_SYMBOL && t->op_code!=Tac::SW && t->op_code!=Tac::PARAM) {
+            if (t == tac_chain) {
+                tac_chain = t->next;
+            } else {
+                t->prev->next = t->next;
+            }
+            // free(t);
+        }
     }
 }
