@@ -200,7 +200,7 @@ void BasicBlock::analyzeLiveness(void) {
     // t->LiveOut = LiveOut->clone();
     if (end_kind == BY_JZERO || end_kind == BY_RETURN)
         t->LiveOut->add(var);
-
+    bool once = false;
     for (t = t->prev; t != NULL; t = t->prev) {
         t->LiveOut = new Set<Temp> {*t->next->LiveOut};
         // t->LiveOut = t->next->LiveOut->clone();
@@ -263,14 +263,16 @@ void BasicBlock::analyzeLiveness(void) {
             break;
         }
         
-        if (t->next == t_end && !t->LiveOut->contains(t->op0.var)  && t->op_code!=Tac::CALL &&  t->op_code!=Tac::PARAM ) {
-            if (t == tac_chain) {
-                tac_chain = t->next;
-            } else {
-                t->prev->next = t->next;
-            }
-        }
-        else if (!t->LiveOut->contains(t->op0.var) && t->op_code!=Tac::CALL &&  t->op_code!=Tac::LOAD_SYMBOL && t->op_code!=Tac::SW && t->op_code!=Tac::PARAM) {
+        // if (once == false && !t->LiveOut->contains(t->op0.var)  && t->op_code!=Tac::CALL &&  t->op_code!=Tac::PARAM ) {
+        //     if (t == tac_chain) {
+        //         tac_chain = t->next;
+        //     } else {
+        //         t->prev->next = t->next;
+        //     }
+        //     once == true;
+        // }
+        // else
+         if (!t->LiveOut->contains(t->op0.var) && t->op_code!=Tac::CALL &&  t->op_code!=Tac::LOAD_SYMBOL && t->op_code!=Tac::SW && t->op_code!=Tac::PARAM) {
             if (t == tac_chain) {
                 tac_chain = t->next;
             } else {

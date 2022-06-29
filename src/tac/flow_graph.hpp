@@ -75,6 +75,8 @@ struct BasicBlock {
 
     void updateLU(Temp);
     void updateDEF(Temp);
+    void ConstantPropagationAnalysis();
+
 };
 
 /**
@@ -113,6 +115,10 @@ class FlowGraph {
     reverse_iterator rend(void);
     // computes the LiveIn set and the LiveOut set of every basic block
     void analyzeLiveness(void); // in tac/dataflow.cpp
+
+    void ConstantPropagationGenerate();
+
+
     // prints this graph
     void dump(std::ostream &);
 };

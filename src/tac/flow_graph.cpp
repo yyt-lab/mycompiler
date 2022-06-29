@@ -13,7 +13,6 @@
 #include "error.hpp"
 #include "tac.hpp"
 #include "flow_graph.hpp"
-
 // temp variable comparator
 struct temp_less {
     bool operator()(Temp t1, Temp t2) { return (t1->id < t2->id); }
@@ -281,6 +280,115 @@ FlowGraph *FlowGraph::makeGraph(Functy f) {
     return g;
 }
 
+void BasicBlock::ConstantPropagationAnalysis()
+{
+    Tac* t = tac_chain;
+     for (; t != NULL; t = t->next) {
+        switch (t->op_code) {
+        case Tac::ASSIGN:
+            
+            if (t->op0.var->numericStat != TempObject::NAC && t->op1.var->numericStat == TempObject::FIXED){  // 右值为常数
+                t->op_code = Tac::LOAD_IMM4;
+                t->op1.ival = t->op1.var->fixedNumber;  // 更改IMM4LOAD形式
+
+                if (t->op0.var->fixedNumber != t->op1.ival){  
+                    t->op0.var->numericStat = TempObject::NAC;  // 多次对左值赋不同右值-》左值为变量
+                } else t->op0.var->fixedNumber =  t->op1.ival;
+            }
+            if (t->op1.var->numericStat == TempObject::NAC){  // 右值为变量
+                t->op0.var->numericStat = TempObject::NAC;
+            }
+        break;
+
+        case Tac::NEG:
+            if (t->op1.var->numericStat == TempObject::FIXED){
+                t->op_code = Tac::LOAD_IMM4;
+                t->op1.ival = -t->op1.var->fixedNumber;
+
+                t->op0.var->numericStat = TempObject::FIXED;
+                t->op0.var->fixedNumber =  t->op1.ival;
+            }
+            if (t->op0.var->numericStat == TempObject::FIXED &&  t->op0.var->fixedNumber !=t->op1.ival){
+                t->op0.var->numericStat = TempObject::NAC;
+            } 
+        break;
+
+        case Tac::LNOT:
+            if (t->op1.var->numericStat == TempObject::FIXED){
+                t->op_code = Tac::LOAD_IMM4;
+                t->op1.ival = !t->op1.var->fixedNumber;
+
+                t->op0.var->numericStat = TempObject::FIXED;
+                t->op0.var->fixedNumber =  t->op1.ival;
+            }
+            if (t->op0.var->numericStat == TempObject::FIXED &&  t->op0.var->fixedNumber !=t->op1.ival){
+                t->op0.var->numericStat = TempObject::NAC;
+            } 
+        break;
+
+        case Tac::BNOT:
+            if (t->op1.var->numericStat == TempObject::FIXED){
+                t->op_code = Tac::LOAD_IMM4;
+                t->op1.ival = ~t->op1.var->fixedNumber;
+
+                t->op0.var->numericStat = TempObject::FIXED;
+                t->op0.var->fixedNumber =  t->op1.ival;
+            }
+            if (t->op0.var->numericStat == TempObject::FIXED &&  t->op0.var->fixedNumber !=t->op1.ival){
+                t->op0.var->numericStat = TempObject::NAC;
+            } 
+        break;
+
+        case Tac::LOAD:
+            // updateLU(t->op1.var);
+            // updateDEF(t->op0.var);
+        break;
+
+        case Tac::ADD:
+        case Tac::SUB:
+        case Tac::MUL:
+        case Tac::DIV:
+        case Tac::MOD:
+        case Tac::EQU:
+        case Tac::NEQ:
+        case Tac::LES:
+        case Tac::LEQ:
+        case Tac::GTR:
+        case Tac::GEQ:
+        case Tac::LAND:
+        case Tac::LOR:
+            // updateLU(t->op1.var);
+            // updateLU(t->op2.var);
+            // updateDEF(t->op0.var);
+            break;
+
+        // case Tac::POP:
+        case Tac::LOAD_IMM4:
+        // case Tac::LOAD_SYMBOL:
+        // case Tac::ALLOC:
+            t->op0.var->numericStat = TempObject::FIXED; 
+            t->op0.var->fixedNumber = t->op1.ival;
+            break;
+
+        case Tac::PUSH:
+        case Tac::PARAM:
+        case Tac::CALL:
+            // updateLU(t->op0.var);
+            break;
+
+        case Tac::SW:
+            // updateLU(t->op0.var);
+            // updateLU(t->op1.var);
+            break;
+
+        default:
+            // mind_assert(false); // MARK, MEMO, JUMP, JZERO and RETURN will not
+                                // appear inside
+            break;
+        }
+     }
+}
+    
 /* Simplifies (optimizes) a control-flow graph.
  *
  * NOTE:
@@ -434,5 +542,12 @@ void FlowGraph::dump(std::ostream &os) {
     for (int i = 0; i < _n; i++) {
         _bbs[i]->dump(os);
         os << std::endl;
+    }
+}
+
+
+void FlowGraph::ConstantPropagationGenerate() {
+    for (int i = 0; i < _n; i++) {
+        _bbs[i]->ConstantPropagationAnalysis();
     }
 }

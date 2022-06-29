@@ -552,6 +552,7 @@ void RiscvDesc::emitFuncty(Functy f) {
     _frame = new RiscvStackFrameManager(-3 * WORD_SIZE);
     FlowGraph *g = FlowGraph::makeGraph(f);
     g->simplify();        // simple optimization
+    g->ConstantPropagationGenerate();
     g->analyzeLiveness(); // computes LiveOut set of the basic blocks
 
     for (FlowGraph::iterator it = g->begin(); it != g->end(); ++it) {
