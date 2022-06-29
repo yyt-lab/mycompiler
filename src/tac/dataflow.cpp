@@ -192,6 +192,8 @@ void BasicBlock::analyzeLiveness(void) {
     // Step 1. locates the last Tac
     for (t = tac_chain; t->next != NULL; t = t->next)
         ;
+    
+    Tac* t_end = t;
 
     // Step 2. begins with LiveOut of the block
     t->LiveOut = new Set<Temp> {*LiveOut};
@@ -260,8 +262,15 @@ void BasicBlock::analyzeLiveness(void) {
                                 // appear inside
             break;
         }
-
-        if (!t->LiveOut->contains(t->op0.var) && t->op_code!=Tac::CALL &&  t->op_code!=Tac::LOAD_SYMBOL && t->op_code!=Tac::SW && t->op_code!=Tac::PARAM) {
+        
+        if (t->next == t_end && !t->LiveOut->contains(t->op0.var)  && t->op_code!=Tac::CALL &&  t->op_code!=Tac::PARAM ) {
+            if (t == tac_chain) {
+                tac_chain = t->next;
+            } else {
+                t->prev->next = t->next;
+            }
+        }
+        else if (!t->LiveOut->contains(t->op0.var) && t->op_code!=Tac::CALL &&  t->op_code!=Tac::LOAD_SYMBOL && t->op_code!=Tac::SW && t->op_code!=Tac::PARAM) {
             if (t == tac_chain) {
                 tac_chain = t->next;
             } else {
