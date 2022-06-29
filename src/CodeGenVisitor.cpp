@@ -126,10 +126,6 @@ antlrcpp::Any CodeGenVisitor::visitUnaryOp(MiniDecafParser::UnaryOpContext *cont
         ptr == nullptr indicates that the token is undeclared
     */
     if (context->Minus()) {
-        // code_ << pop1
-        //     << "\tsub a0, x0, t0\n"
-        //     << push;
-        // return retType::INT;
         Temp zeroVal = tr->genLoadImm4(0);
         Temp result = tr -> genSub(zeroVal, rl);
         return result;
@@ -183,30 +179,98 @@ antlrcpp::Any CodeGenVisitor::visitRel_nop(MiniDecafParser::Rel_nopContext *cont
 }
 antlrcpp::Any CodeGenVisitor::visitLor(MiniDecafParser::LorContext *context)
 {
-    Temp rl = visit(context->lor_op(0));
-    Temp rr = visit(context->lor_op(1));
+    // // Label L1 = tr->getNewLabel(); // entry of the false branch
+    // // Label L2 = tr->getNewLabel(); // exit
 
+    // // Temp cond_val = visit(context->lor_op()); // 条件值
+   
+
+
+    // tr->genJumpOnZero(L1, cond_val); // 失败时，跳转到L1（else）
+
+    // // true branch begin
+    // tr->genAssign(retVal, visit(context->expr()));
+    // tr->genJump(L2); 
+    // // true branch end
+
+    // // false branch begin
+    // tr->genMarkLabel(L1);
+    // tr->genAssign(retVal, visit(context->conditional()));
+    
+    // tr->genMarkLabel(L2);
+    
+    // return retVal; 
+    // // false branch end
+
+
+    Label L1 = tr->getNewLabel(); // entry of the false branch
+    Label L2 = tr->getNewLabel(); // exit
+
+    Temp rl = visit(context->lor_op(0));
+    Temp retVal = tr->getNewTempI4(); // 返回值
+
+
+    Temp cond_val = rl; // 条件值1
+
+    tr->genJumpOnZero(L1, cond_val); // 失败时，跳转到L1（else）
+
+    // true branch begin
+    Temp tp = tr->genLoadImm4(1); // 返回值
+    tr->genAssign(retVal, tp);
+    tr->genJump(L2); 
+    // true branch end
+
+    // false branch begin
+    tr->genMarkLabel(L1);
+    Temp rr = visit(context->lor_op(1));
     if (context->LOR()) {
-        Temp result = tr -> genLOr(rl, rr);
-        return result;
+        Temp tp = tr -> genLOr(rl, rr);
+        tr->genAssign(retVal, tp);
     }
-    std::cerr<<"current not support!"<<std::endl;
-    mind_assert(false);
+
+    tr->genMarkLabel(L2);
+    return retVal; 
 }
 
 antlrcpp::Any CodeGenVisitor::visitLand(MiniDecafParser::LandContext *context)
 {
-    // visit(context->land_op(0));
-    // visit(context->land_op(1));
-    Temp rl = visit(context->land_op(0));
-    Temp rr = visit(context->land_op(1));
+    Label L1 = tr->getNewLabel(); // entry of the false branch
+    Label L2 = tr->getNewLabel(); // exit
 
+    Temp rl = visit(context->land_op(0));
+    Temp retVal = tr->getNewTempI4(); // 返回值
+
+
+    Temp cond_val = rl; // 条件值1
+
+    tr->genJumpOnZero(L1, cond_val); // 失败时，跳转到L1（else）
+
+    // true branch begin
+    Temp rr = visit(context->land_op(1));
     if (context->LAND()) {
-       Temp result = tr -> genLAnd(rl, rr);
-       return result;
+        Temp tp =  tr -> genLAnd(rl, rr);
+        tr->genAssign(retVal, tp);
     }
-    std::cerr<<"current not support!"<<std::endl;
-    mind_assert(false);
+    tr->genJump(L2);
+    // true branch end
+
+    // false branch begin
+    tr->genMarkLabel(L1);
+    Temp tp = tr->genLoadImm4(0); // 返回值
+    tr->genAssign(retVal, tp);
+
+    tr->genMarkLabel(L2);
+    return retVal; 
+
+    // Temp rl = visit(context->land_op(0));
+    // Temp rr = visit(context->land_op(1));
+
+    // if (context->LAND()) {
+    //    Temp result = tr -> genLAnd(rl, rr);
+    //    return result;
+    // }
+    // std::cerr<<"current not support!"<<std::endl;
+    // mind_assert(false);
 }
 
 antlrcpp::Any CodeGenVisitor::visitEqual(MiniDecafParser::EqualContext *context)
@@ -392,7 +456,6 @@ antlrcpp::Any CodeGenVisitor::visitConditionalExpr(MiniDecafParser::ConditionalE
     // true branch end
 
     // false branch begin
-    // retVal = visit(context->conditional());
     tr->genMarkLabel(L1);
     tr->genAssign(retVal, visit(context->conditional()));
     

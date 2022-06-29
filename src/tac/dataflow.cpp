@@ -260,5 +260,8 @@ void BasicBlock::analyzeLiveness(void) {
                                 // appear inside
             break;
         }
+        // if (!t->LiveOut->contains(t->op0.var) && t->op_code!=Tac::CALL) {
+        //     t->prev->next = t->next;
+        // }
     }
 }

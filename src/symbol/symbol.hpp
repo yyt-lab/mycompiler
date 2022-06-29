@@ -11,7 +11,7 @@
 #pragma once
 
 // #include "define.hpp"
-#include "scope.hpp"
+// #include "scope.hpp"
 #include "type.hpp"
 #include "tac.hpp"
 #include <iostream>
