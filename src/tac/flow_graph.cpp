@@ -279,64 +279,55 @@ FlowGraph *FlowGraph::makeGraph(Functy f) {
 
     return g;
 }
+int CalcConstantPropagationValue(Tac::Kind kind, int value)
+{
+    int ret = 0;
+    switch (kind)
+    {
+    case Tac::ASSIGN:
+        ret = value;
+        break;
 
+    case Tac::BNOT:
+        ret = ~value;
+        break;
+
+    case Tac::NEG:
+        ret = -value;
+        break;
+
+    case Tac::LNOT:
+        ret = !value;
+        break;
+    default:
+        break;
+    }
+
+    return ret;
+}
 void BasicBlock::ConstantPropagationAnalysis()
 {
     Tac* t = tac_chain;
      for (; t != NULL; t = t->next) {
         switch (t->op_code) {
         case Tac::ASSIGN:
-            
+        case Tac::NEG:
+        case Tac::LNOT:
+        case Tac::BNOT:
             if (t->op0.var->numericStat != TempObject::NAC && t->op1.var->numericStat == TempObject::FIXED){  // 右值为常数
+                t->op1.ival = CalcConstantPropagationValue(t->op_code, t->op1.var->fixedNumber);  // 更改IMM4LOAD形式
                 t->op_code = Tac::LOAD_IMM4;
-                t->op1.ival = t->op1.var->fixedNumber;  // 更改IMM4LOAD形式
 
-                if (t->op0.var->fixedNumber != t->op1.ival){  
+                if (t->op0.var->fixedNumber != t->op1.ival ){  
                     t->op0.var->numericStat = TempObject::NAC;  // 多次对左值赋不同右值-》左值为变量
-                } else t->op0.var->fixedNumber =  t->op1.ival;
+                } else{
+                    t->op0.var->fixedNumber =  t->op1.ival;
+                    t->op0.var->numericStat = TempObject::FIXED;
+                } 
             }
             if (t->op1.var->numericStat == TempObject::NAC){  // 右值为变量
                 t->op0.var->numericStat = TempObject::NAC;
             }
-        break;
-
-        case Tac::NEG:
-            if (t->op1.var->numericStat == TempObject::FIXED){
-                t->op_code = Tac::LOAD_IMM4;
-                t->op1.ival = -t->op1.var->fixedNumber;
-
-                t->op0.var->numericStat = TempObject::FIXED;
-                t->op0.var->fixedNumber =  t->op1.ival;
-            }
-            if (t->op0.var->numericStat == TempObject::FIXED &&  t->op0.var->fixedNumber !=t->op1.ival){
-                t->op0.var->numericStat = TempObject::NAC;
-            } 
-        break;
-
-        case Tac::LNOT:
-            if (t->op1.var->numericStat == TempObject::FIXED){
-                t->op_code = Tac::LOAD_IMM4;
-                t->op1.ival = !t->op1.var->fixedNumber;
-
-                t->op0.var->numericStat = TempObject::FIXED;
-                t->op0.var->fixedNumber =  t->op1.ival;
-            }
-            if (t->op0.var->numericStat == TempObject::FIXED &&  t->op0.var->fixedNumber !=t->op1.ival){
-                t->op0.var->numericStat = TempObject::NAC;
-            } 
-        break;
-
-        case Tac::BNOT:
-            if (t->op1.var->numericStat == TempObject::FIXED){
-                t->op_code = Tac::LOAD_IMM4;
-                t->op1.ival = ~t->op1.var->fixedNumber;
-
-                t->op0.var->numericStat = TempObject::FIXED;
-                t->op0.var->fixedNumber =  t->op1.ival;
-            }
-            if (t->op0.var->numericStat == TempObject::FIXED &&  t->op0.var->fixedNumber !=t->op1.ival){
-                t->op0.var->numericStat = TempObject::NAC;
-            } 
         break;
 
         case Tac::LOAD:
@@ -345,6 +336,24 @@ void BasicBlock::ConstantPropagationAnalysis()
         break;
 
         case Tac::ADD:
+             if (t->op0.var->numericStat != TempObject::NAC 
+                        && t->op1.var->numericStat == TempObject::FIXED
+                        && t->op2.var->numericStat == TempObject::FIXED ){  // 右值为常数
+                // t->op1.ival = CalcConstantPropagationValue(t->op_code, t->op1.var->fixedNumber);  // 更改IMM4LOAD形式
+                t->op1.ival = t->op1.var->fixedNumber + t->op2.var->fixedNumber; // 更改IMM4LOAD形式
+                t->op_code = Tac::LOAD_IMM4;
+
+                if (t->op0.var->fixedNumber != t->op1.ival && t->op0.var->fixedNumber != -1233 ){  
+                    t->op0.var->numericStat = TempObject::NAC;  // 多次对左值赋不同右值-》左值为变量
+                } else t->op0.var->fixedNumber =  t->op1.ival;
+            }
+            if (t->op1.var->numericStat == TempObject::NAC || t->op2.var->numericStat == TempObject::NAC) {  // 右值为变量
+                t->op0.var->numericStat = TempObject::NAC;
+            }
+            
+        break;
+
+
         case Tac::SUB:
         case Tac::MUL:
         case Tac::DIV:

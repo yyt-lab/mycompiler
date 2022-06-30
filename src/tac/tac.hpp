@@ -37,7 +37,8 @@ typedef struct TempObject {
         FIXED,
     }NumericStat;
     NumericStat numericStat = UNDEF;
-    int fixedNumber;
+    int fixedNumber = -1233;
+    bool IsInitialized = false;
 } * Temp;
 
 /** Representation of a Label.
