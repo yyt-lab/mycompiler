@@ -279,7 +279,7 @@ FlowGraph *FlowGraph::makeGraph(Functy f) {
 
     return g;
 }
-int CalcConstantPropagationValue(Tac::Kind kind, int value)
+int CalcConstantPropagationValue(Tac::Kind kind, int value, int value2)
 {
     int ret = 0;
     switch (kind)
@@ -299,6 +299,32 @@ int CalcConstantPropagationValue(Tac::Kind kind, int value)
     case Tac::LNOT:
         ret = !value;
         break;
+
+    case Tac::SUB:
+        ret = value-value2;
+        break;
+
+        case Tac::MUL:
+            ret = value*value2;
+            break;
+        case Tac::DIV:
+            ret = value/value2;
+        break;
+        case Tac::MOD:
+            ret = value % value2;
+            break;
+        case Tac::EQU:
+            ret = value == value2;
+        break;
+        case Tac::NEQ:
+             ret = value!=value2;
+        break;
+        // case Tac::LES:
+        // case Tac::LEQ:
+        // case Tac::GTR:
+        // case Tac::GEQ:
+        // case Tac::LAND:
+        // case Tac::LOR:
     default:
         break;
     }
@@ -315,14 +341,16 @@ void BasicBlock::ConstantPropagationAnalysis()
         case Tac::LNOT:
         case Tac::BNOT:
             if (t->op0.var->numericStat != TempObject::NAC && t->op1.var->numericStat == TempObject::FIXED){  // 右值为常数
-                t->op1.ival = CalcConstantPropagationValue(t->op_code, t->op1.var->fixedNumber);  // 更改IMM4LOAD形式
+                t->op1.ival = CalcConstantPropagationValue(t->op_code, t->op1.var->fixedNumber, 0);  // 更改IMM4LOAD形式
                 t->op_code = Tac::LOAD_IMM4;
 
-                if (t->op0.var->fixedNumber != t->op1.ival ){  
+                if (t->op0.var->fixedNumber != t->op1.ival){  
+                // if (t->op0.var->fixedNumber != t->op1.ival && t->op0.var->IsInitialized == true){  
                     t->op0.var->numericStat = TempObject::NAC;  // 多次对左值赋不同右值-》左值为变量
                 } else{
                     t->op0.var->fixedNumber =  t->op1.ival;
                     t->op0.var->numericStat = TempObject::FIXED;
+                    // t->op0.var->IsInitialized = true;
                 } 
             }
             if (t->op1.var->numericStat == TempObject::NAC){  // 右值为变量
@@ -341,9 +369,8 @@ void BasicBlock::ConstantPropagationAnalysis()
                         && t->op2.var->numericStat == TempObject::FIXED ){  // 右值为常数
                 // t->op1.ival = CalcConstantPropagationValue(t->op_code, t->op1.var->fixedNumber);  // 更改IMM4LOAD形式
                 t->op1.ival = t->op1.var->fixedNumber + t->op2.var->fixedNumber; // 更改IMM4LOAD形式
-                t->op_code = Tac::LOAD_IMM4;
-
-                if (t->op0.var->fixedNumber != t->op1.ival && t->op0.var->fixedNumber != -1233 ){  
+                
+                if (t->op0.var->fixedNumber != t->op1.ival ){  
                     t->op0.var->numericStat = TempObject::NAC;  // 多次对左值赋不同右值-》左值为变量
                 } else t->op0.var->fixedNumber =  t->op1.ival;
             }
@@ -360,6 +387,20 @@ void BasicBlock::ConstantPropagationAnalysis()
         case Tac::MOD:
         case Tac::EQU:
         case Tac::NEQ:
+                if (t->op0.var->numericStat != TempObject::NAC 
+                        && t->op1.var->numericStat == TempObject::FIXED
+                        && t->op2.var->numericStat == TempObject::FIXED ){  // 右值为常数
+                // t->op1.ival = CalcConstantPropagationValue(t->op_code, t->op1.var->fixedNumber);  // 更改IMM4LOAD形式
+                t->op1.ival = CalcConstantPropagationValue(t->op_code, t->op1.var->fixedNumber, t->op2.var->fixedNumber); // 更改IMM4LOAD形式
+                
+                if (t->op0.var->fixedNumber != t->op1.ival ){  
+                    t->op0.var->numericStat = TempObject::NAC;  // 多次对左值赋不同右值-》左值为变量
+                } else t->op0.var->fixedNumber =  t->op1.ival;
+            }
+            if (t->op1.var->numericStat == TempObject::NAC || t->op2.var->numericStat == TempObject::NAC) {  // 右值为变量
+                t->op0.var->numericStat = TempObject::NAC;
+            }
+
         case Tac::LES:
         case Tac::LEQ:
         case Tac::GTR:
@@ -373,21 +414,8 @@ void BasicBlock::ConstantPropagationAnalysis()
 
         // case Tac::POP:
         case Tac::LOAD_IMM4:
-        // case Tac::LOAD_SYMBOL:
-        // case Tac::ALLOC:
             t->op0.var->numericStat = TempObject::FIXED; 
             t->op0.var->fixedNumber = t->op1.ival;
-            break;
-
-        case Tac::PUSH:
-        case Tac::PARAM:
-        case Tac::CALL:
-            // updateLU(t->op0.var);
-            break;
-
-        case Tac::SW:
-            // updateLU(t->op0.var);
-            // updateLU(t->op1.var);
             break;
 
         default:
