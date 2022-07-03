@@ -574,17 +574,8 @@ void RiscvDesc::emitFuncty(Functy f) {
         //     simplePeephole((RiscvInstr *)b->instr_chain);
         b->mark = 0; // clears the marks (for the next step)
     }
-    // if (Option::getLevel() == Option::DATAFLOW) {
-        std::cout << "Control-flow Graph of " << f->entry->str_form << ":" << std::endl;
-        g->dump(std::cout);
-    //     // TO STUDENTS: You might not want to get lots of outputs when
-    //     // debugging.
-    //     //              You can enable the following line so that the program
-    //     //              will terminate after the first Functy is done.
-    //     // std::exit(0);
-    //     return;
-    // }
-
+    std::cout << "Control-flow Graph of " << f->entry->str_form << ":" << std::endl;
+    g->dump(std::cout);
     mind_assert(!f->entry->str_form.empty()); // this assertion should hold for every Functy
     // outputs the header of a function
     emitProlog(f->entry, _frame->getStackFrameSize());

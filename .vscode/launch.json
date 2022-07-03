@@ -6,37 +6,37 @@
     "configurations": [
 
     
-        {
-            "name": "(gdb) Launch",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "/root/mycode/minidecaf/build/MiniDecaf",
-            "args": ["build/test111.c", "build/test111"],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ],
-            // "preLaunchTask": "make", // 调试会话开始前执行的任务，一般为编译程序
+//         {
+//             "name": "(gdb) Launch",
+//             "type": "cppdbg",
+//             "request": "launch",
+//             "program": "/root/mycode/minidecaf/build/MiniDecaf",
+//             "args": ["build/test111.c", "build/test111"],
+//             "stopAtEntry": false,
+//             "cwd": "${workspaceFolder}",
+//             "environment": [],
+//             "externalConsole": false,
+//             "MIMode": "gdb",
+//             "setupCommands": [
+//                 {
+//                     "description": "Enable pretty-printing for gdb",
+//                     "text": "-enable-pretty-printing",
+//                     "ignoreFailures": true
+//                 }
+//             ],
+//             // "preLaunchTask": "make", // 调试会话开始前执行的任务，一般为编译程序
 
- 　　       "miDebuggerPath": "/usr/bin/gdb" 
-        }
+//  　　       "miDebuggerPath": "/usr/bin/gdb" 
+//         }
         // ,
-        // {
-        //     "name": "Debug ANTLR4 grammar",
-        //     "type": "antlr-debug",
-        //     "request": "launch",
-        //     "input": "/root/mycode/minidecaf/build/test111.c",
-        //     "grammar": "/root/mycode/minidecaf/generated/MiniDecaf.g4",
-        //     "printParseTree": true,
-        //     "visualParseTree": true
-        // }
+        {
+            "name": "Debug ANTLR4 grammar",
+            "type": "antlr-debug",
+            "request": "launch",
+            "input": "/root/mycode/minidecaf/build/test111.c",
+            "grammar": "/root/mycode/minidecaf/generated/MiniDecaf.g4",
+            "printParseTree": true,
+            "visualParseTree": true
+        }
     ]
 }

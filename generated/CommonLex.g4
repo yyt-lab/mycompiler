@@ -53,3 +53,7 @@ Identifier
 WS : 
     [ \t\r\n] -> skip
     ;
+    
+SL_COMMENT
+    : '//' .*? '\n' -> skip
+    ;
